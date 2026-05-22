@@ -1,4 +1,4 @@
-import { useSignIn, useSignUp } from '@clerk/expo';
+import { useSignIn, useSignUp, useAuth } from '@clerk/expo';
 import { type Href, useRouter } from 'expo-router';
 import { styled } from 'nativewind';
 import React, { useState } from 'react';
@@ -10,6 +10,7 @@ const SafeAreaView = styled(RNSafeAreaView);
 export default function SignIn() {
   const { signIn, errors, fetchStatus } = useSignIn();
   const { signUp } = useSignUp();
+  const { isLoaded } = useAuth();
   const router = useRouter();
 
   console.log("[SignIn] Component rendered", { fetchStatus, hasSignIn: !!signIn, hasErrors: !!errors });
@@ -17,10 +18,11 @@ export default function SignIn() {
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
 
+  const isReady = isLoaded;
   const isSubmitting = fetchStatus === 'fetching';
 
   const handleSubmit = async () => {
-    if (!emailInput || !passwordInput) return;
+    if (!isReady || !emailInput || !passwordInput) return;
 
     try {
       const { error } = await signIn.password({
@@ -41,8 +43,14 @@ export default function SignIn() {
               return;
             }
             const url = decorateUrl('/');
-            if (url.startsWith('http')) {
-              window.location.href = url;
+            if (url.startsWith('http') || url.includes('://')) {
+              if (typeof window !== 'undefined' && window.location && typeof window.location.assign === 'function') {
+                window.location.assign(url);
+              } else if (typeof window !== 'undefined' && window.location) {
+                window.location.href = url;
+              } else {
+                router.push(url as Href);
+              }
             } else {
               router.push(url as Href);
             }
@@ -104,7 +112,7 @@ export default function SignIn() {
                 placeholderTextColor="rgba(8, 17, 38, 0.4)"
                 value={emailInput}
                 onChangeText={setEmailInput}
-                editable={!isSubmitting}
+                editable={isReady && !isSubmitting}
               />
               {identifierError && (
                 <Text className="auth-error">{identifierError}</Text>
@@ -121,7 +129,7 @@ export default function SignIn() {
                 placeholderTextColor="rgba(8, 17, 38, 0.4)"
                 value={passwordInput}
                 onChangeText={setPasswordInput}
-                editable={!isSubmitting}
+                editable={isReady && !isSubmitting}
               />
               {passwordError && (
                 <Text className="auth-error">{passwordError}</Text>
@@ -130,11 +138,11 @@ export default function SignIn() {
 
             {/* Submit Button */}
             <Pressable
-              className={`auth-button ${isSubmitting || !emailInput || !passwordInput ? 'auth-button-disabled' : ''}`}
+              className={`auth-button ${isSubmitting || !isReady || !emailInput || !passwordInput ? 'auth-button-disabled' : ''}`}
               onPress={handleSubmit}
-              disabled={isSubmitting || !emailInput || !passwordInput}
+              disabled={isSubmitting || !isReady || !emailInput || !passwordInput}
             >
-              {isSubmitting ? (
+              {isSubmitting || !isReady ? (
                 <ActivityIndicator color="#081126" size="small" />
               ) : (
                 <Text className="auth-button-text">Sign In</Text>
@@ -145,7 +153,7 @@ export default function SignIn() {
 
         {/* Redirect Links */}
         <View className="auth-link-row">
-          <Text className="auth-link-copy">Don't have an account?</Text>
+          <Text className="auth-link-copy">{"Don't have an account?"}</Text>
           <Pressable
             onPress={async () => {
               try {

@@ -9,17 +9,18 @@ const SafeAreaView = styled(RNSafeAreaView);
 
 export default function SignUp() {
   const { signUp, errors, fetchStatus } = useSignUp();
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
 
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [codeInput, setCodeInput] = useState('');
 
-  const isSubmitting = fetchStatus === 'fetching';
+  const isReady = isLoaded && !!signUp;
+  const isSubmitting = isReady && fetchStatus === 'fetching';
 
   const handleSubmit = async () => {
-    if (!emailInput || !passwordInput) return;
+    if (!isReady || !emailInput || !passwordInput) return;
 
     try {
       const { error } = await signUp.password({
@@ -39,7 +40,7 @@ export default function SignUp() {
   };
 
   const handleVerify = async () => {
-    if (!codeInput) return;
+    if (!isReady || !codeInput) return;
 
     try {
       const { error } = await signUp.verifications.verifyEmailCode({
@@ -59,8 +60,14 @@ export default function SignUp() {
               return;
             }
             const url = decorateUrl('/');
-            if (url.startsWith('http')) {
-              window.location.href = url;
+            if (url.startsWith('http') || url.includes('://')) {
+              if (typeof window !== 'undefined' && window.location && typeof window.location.assign === 'function') {
+                window.location.assign(url);
+              } else if (typeof window !== 'undefined' && window.location) {
+                window.location.href = url;
+              } else {
+                router.push(url as Href);
+              }
             } else {
               router.push(url as Href);
             }
@@ -75,6 +82,7 @@ export default function SignUp() {
   };
 
   const handleResend = async () => {
+    if (!isReady) return;
     try {
       await signUp.verifications.sendEmailCode();
     } catch (e) {
@@ -82,8 +90,17 @@ export default function SignUp() {
     }
   };
 
+  // Render a loading state if Clerk isn't ready yet
+  if (!isReady) {
+    return (
+      <SafeAreaView className="auth-safe-area justify-center items-center">
+        <ActivityIndicator color="#081126" size="large" />
+      </SafeAreaView>
+    );
+  }
+
   // Skip rendering if registration is complete or already signed in
-  if (signUp?.status === 'complete' || isSignedIn) {
+  if (signUp.status === 'complete' || isSignedIn) {
     return null;
   }
 

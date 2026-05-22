@@ -11,6 +11,18 @@ const Settings = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
 
+  const emailAddress = user?.emailAddresses?.[0]?.emailAddress;
+  const fallbackName = emailAddress ? emailAddress.split("@")[0] : "";
+  const displayName = user?.fullName || fallbackName || "User";
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (e) {
+      console.error("Failed to sign out:", e);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background p-5 pt-8">
       {/* Header */}
@@ -24,10 +36,10 @@ const Settings = () => {
             className="w-20 h-20 rounded-full border-2 border-accent mb-3"
           />
           <Text className="text-xl font-sans-bold text-primary">
-            {user.fullName || user.emailAddresses[0]?.emailAddress.split("@")[0]}
+            {displayName}
           </Text>
           <Text className="text-sm font-sans-medium text-muted-foreground mt-1">
-            {user.emailAddresses[0]?.emailAddress}
+            {emailAddress || ""}
           </Text>
         </View>
       )}
@@ -51,7 +63,7 @@ const Settings = () => {
 
       {/* Sign Out Button */}
       <Pressable
-        onPress={() => signOut()}
+        onPress={handleSignOut}
         className="mt-auto mb-30 items-center rounded-2xl bg-destructive py-4 border border-destructive/20"
       >
         <Text className="text-base font-sans-bold text-white">Sign Out</Text>

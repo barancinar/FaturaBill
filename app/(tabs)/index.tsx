@@ -20,6 +20,10 @@ export default function App() {
     const { user } = useUser();
     const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
 
+    const emailAddress = user?.emailAddresses?.[0]?.emailAddress;
+    const fallbackName = emailAddress ? emailAddress.split('@')[0] : '';
+    const displayName = user?.firstName || fallbackName || HOME_USER.name;
+
     return (
         <SafeAreaView className="flex-1 bg-background p-5">
             
@@ -35,7 +39,7 @@ export default function App() {
                                         className="home-avatar" 
                                     />
                                     <Text className="home-user-name">
-                                        {user?.firstName || user?.emailAddresses[0]?.emailAddress.split('@')[0] || HOME_USER.name}
+                                        {displayName}
                                     </Text>
                                 </View>
                                 <Image source={icons.add} className="home-add-icon"/>
