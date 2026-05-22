@@ -6,6 +6,7 @@ import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import "@/global.css";
 import { formatCurrency } from "@/lib/utils";
+import { useUser } from "@clerk/expo";
 import dayjs from "dayjs";
 import { styled } from "nativewind";
 import { useState } from "react";
@@ -16,7 +17,12 @@ import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
+    const { user } = useUser();
     const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
+
+    const emailAddress = user?.emailAddresses?.[0]?.emailAddress;
+    const fallbackName = emailAddress ? emailAddress.split('@')[0] : '';
+    const displayName = user?.firstName || fallbackName || HOME_USER.name;
 
     return (
         <SafeAreaView className="flex-1 bg-background p-5">
@@ -28,8 +34,13 @@ export default function App() {
                         <>
                             <View className="home-header">
                                 <View className="home-user">
-                                    <Image source={images.avatar} className="home-avatar" />
-                                    <Text className="home-user-name">{HOME_USER.name}</Text>
+                                    <Image 
+                                        source={user?.imageUrl ? { uri: user.imageUrl } : images.avatar} 
+                                        className="home-avatar" 
+                                    />
+                                    <Text className="home-user-name">
+                                        {displayName}
+                                    </Text>
                                 </View>
                                 <Image source={icons.add} className="home-add-icon"/>
                             </View>
