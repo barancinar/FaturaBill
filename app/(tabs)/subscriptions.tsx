@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
+
 import { 
   Text, 
   View, 
@@ -15,17 +17,26 @@ import { Feather } from "@expo/vector-icons";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { HOME_SUBSCRIPTIONS } from "@/constants/data";
 import { formatCurrency } from "@/lib/utils";
+import { SUBSCRIPTION_CATEGORIES } from "@/constants/subscriptions";
 import "@/global.css";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
-const FILTER_OPTIONS = ["All", "Active", "Paused", "Cancelled", "Design", "AI Tools", "Developer Tools"];
+const FILTER_OPTIONS = ["All", ...SUBSCRIPTION_CATEGORIES];
 
 const Subscriptions = () => {
   const posthog = usePostHog();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([...HOME_SUBSCRIPTIONS]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setSubscriptions([...HOME_SUBSCRIPTIONS]);
+    }, [])
+  );
+
 
   // Calculate statistics based on current active/paused status
   const { totalMonthly, activeCount, pausedCount } = useMemo(() => {
@@ -33,7 +44,7 @@ const Subscriptions = () => {
     let paused = 0;
     let monthlySpend = 0;
 
-    HOME_SUBSCRIPTIONS.forEach((sub) => {
+    subscriptions.forEach((sub) => {
       if (sub.status === "active") {
         active++;
       } else if (sub.status === "paused") {
@@ -53,11 +64,11 @@ const Subscriptions = () => {
       activeCount: active,
       pausedCount: paused,
     };
-  }, []);
+  }, [subscriptions]);
 
   // Filter subscriptions based on search query and selected chip
   const filteredSubscriptions = useMemo(() => {
-    return HOME_SUBSCRIPTIONS.filter((sub) => {
+    return subscriptions.filter((sub) => {
       // 1. Search Query filter
       const matchesSearch = 
         sub.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,7 +86,7 @@ const Subscriptions = () => {
       // Category filter (Design, AI Tools, Developer Tools)
       return sub.category?.toLowerCase() === selectedFilter.toLowerCase();
     });
-  }, [searchQuery, selectedFilter]);
+  }, [subscriptions, searchQuery, selectedFilter]);
 
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
