@@ -19,10 +19,11 @@ const Settings = () => {
 
   const handleSignOut = async () => {
     try {
-      posthog.capture("user_signed_out");
       await signOut();
+      posthog.capture("user_signed_out");
     } catch (e) {
       console.error("Failed to sign out:", e);
+      posthog.capture("user_sign_out_failed", { error: e instanceof Error ? e.message : String(e) });
     }
   };
 

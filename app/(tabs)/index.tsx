@@ -22,7 +22,7 @@ export default function App() {
     const { user } = useUser();
     const posthog = usePostHog();
     const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
-    const [subscriptions, setSubscriptions] = useState<Subscription[]>(HOME_SUBSCRIPTIONS);
+    const [subscriptions, setSubscriptions] = useState<Subscription[]>([...HOME_SUBSCRIPTIONS]);
     const [modalVisible, setModalVisible] = useState(false);
 
     const emailAddress = user?.emailAddresses?.[0]?.emailAddress;
@@ -30,10 +30,12 @@ export default function App() {
     const displayName = user?.firstName || fallbackName || HOME_USER.name;
 
     const handleCreateSubscription = (newSub: Subscription) => {
-        // Prepend to local state
-        setSubscriptions((prev) => [newSub, ...prev]);
-        // Mutate HOME_SUBSCRIPTIONS array so other tabs see it too
-        HOME_SUBSCRIPTIONS.unshift(newSub);
+        setSubscriptions((prev) => {
+            const newList = [newSub, ...prev];
+            HOME_SUBSCRIPTIONS.length = 0;
+            HOME_SUBSCRIPTIONS.push(...newList);
+            return newList;
+        });
     };
 
     return (

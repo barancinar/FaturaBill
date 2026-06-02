@@ -14,6 +14,18 @@ if (!publishableKey) {
   throw new Error("Add your Clerk Publishable Key to the .env file");
 }
 
+const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY!;
+
+if (!posthogApiKey) {
+  throw new Error("Add your EXPO_PUBLIC_POSTHOG_API_KEY to the .env file");
+}
+
+const posthogHost = process.env.EXPO_PUBLIC_POSTHOG_HOST!;
+
+if (!posthogHost) {
+  throw new Error("Add your EXPO_PUBLIC_POSTHOG_HOST to the .env file");
+}
+
 function InitialLayout() {
   const { isLoaded, isSignedIn, userId } = useAuth();
   const posthog = usePostHog();
@@ -76,8 +88,7 @@ export default function RootLayout() {
     return null;
   }
 
-  const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY || "phc_tN2MBrdS9889XoS6wHVor9r4s2wqKoaSTdHHcneHmBto";
-  const posthogHost = process.env.EXPO_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
+
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>

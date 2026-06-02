@@ -13,6 +13,7 @@ import {
 import { clsx } from 'clsx';
 import dayjs from 'dayjs';
 import { icons } from '@/constants/icons';
+import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions';
 
 interface CreateSubscriptionModalProps {
   visible: boolean;
@@ -20,16 +21,6 @@ interface CreateSubscriptionModalProps {
   onCreate: (newSubscription: Subscription) => void;
 }
 
-const CATEGORIES = [
-  "Entertainment",
-  "AI Tools",
-  "Developer Tools",
-  "Design",
-  "Productivity",
-  "Cloud",
-  "Music",
-  "Other"
-];
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Entertainment": "#ffd1d1",
@@ -171,7 +162,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
             <View className="auth-field">
               <Text className="auth-label">Category</Text>
               <View className="category-scroll">
-                {CATEGORIES.map((cat) => {
+                {SUBSCRIPTION_CATEGORIES.map((cat) => {
                   const isActive = category === cat;
                   return (
                     <Pressable
