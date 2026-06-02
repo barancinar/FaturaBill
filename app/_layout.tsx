@@ -4,6 +4,7 @@ import { SplashScreen, Stack, useRouter, useSegments, useRootNavigationState } f
 import { useEffect } from "react";
 import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/expo";
 import { tokenCache } from "@/clerk/tokenCache";
+import { PostHogProvider, usePostHog } from "posthog-react-native";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -14,12 +15,22 @@ if (!publishableKey) {
 }
 
 function InitialLayout() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
+  const posthog = usePostHog();
   const segments = useSegments();
   const router = useRouter();
   const navigationState = useRootNavigationState();
 
   console.log("[InitialLayout] Rendered", { isLoaded, isSignedIn, segments, navReady: !!navigationState?.key });
+
+  // Sync user authentication status to PostHog session
+  useEffect(() => {
+    if (isLoaded && isSignedIn && userId) {
+      posthog.identify(userId);
+    } else if (isLoaded && !isSignedIn) {
+      posthog.reset();
+    }
+  }, [isLoaded, isSignedIn, userId, posthog]);
 
   useEffect(() => {
     console.log("[InitialLayout] Effect running", { isLoaded, isSignedIn, segments, navReady: !!navigationState?.key });
@@ -65,10 +76,20 @@ export default function RootLayout() {
     return null;
   }
 
+  const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY || "phc_tN2MBrdS9889XoS6wHVor9r4s2wqKoaSTdHHcneHmBto";
+  const posthogHost = process.env.EXPO_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com";
+
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
-        <InitialLayout />
+        <PostHogProvider
+          apiKey={posthogApiKey}
+          options={{
+            host: posthogHost,
+          }}
+        >
+          <InitialLayout />
+        </PostHogProvider>
       </ClerkLoaded>
     </ClerkProvider>
   );
