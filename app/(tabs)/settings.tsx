@@ -1,7 +1,7 @@
 import images from "@/constants/images";
 import { useClerk, useUser } from "@clerk/expo";
 import { styled } from "nativewind";
-import { usePostHog } from "posthog-react-native";
+import { useAnalytics } from "@/lib/analytics";
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
@@ -11,7 +11,7 @@ const SafeAreaView = styled(RNSafeAreaView);
 const Settings = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
-  const posthog = usePostHog();
+  const { trackSignOut, trackSignOutFailure, trackAppError } = useAnalytics();
 
   const emailAddress = user?.emailAddresses?.[0]?.emailAddress;
   const fallbackName = emailAddress ? emailAddress.split("@")[0] : "";
@@ -20,10 +20,12 @@ const Settings = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      posthog.capture("user_signed_out");
+      trackSignOut();
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
       console.error("Failed to sign out:", e);
-      posthog.capture("user_sign_out_failed", { error: e instanceof Error ? e.message : String(e) });
+      trackSignOutFailure(errMsg);
+      trackAppError("sign_out", errMsg);
     }
   };
 

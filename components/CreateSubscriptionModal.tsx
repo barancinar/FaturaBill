@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet
-} from 'react-native';
-import { clsx } from 'clsx';
-import dayjs from 'dayjs';
 import { icons } from '@/constants/icons';
 import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions';
+import { clsx } from 'clsx';
+import dayjs from 'dayjs';
+import { useAnalytics } from '@/lib/analytics';
+import React, { useState, useEffect } from 'react';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
+} from 'react-native';
 
 interface CreateSubscriptionModalProps {
   visible: boolean;
@@ -34,10 +35,17 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function CreateSubscriptionModal({ visible, onClose, onCreate }: CreateSubscriptionModalProps) {
+  const { trackSubscriptionCreateStarted, trackSubscriptionCreateCancelled, trackSubscriptionCreated } = useAnalytics();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [frequency, setFrequency] = useState<'Monthly' | 'Yearly'>('Monthly');
   const [category, setCategory] = useState('Entertainment');
+
+  useEffect(() => {
+    if (visible) {
+      trackSubscriptionCreateStarted();
+    }
+  }, [visible, trackSubscriptionCreateStarted]);
 
   const handleClose = () => {
     // Reset form states
@@ -46,6 +54,11 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
     setFrequency('Monthly');
     setCategory('Entertainment');
     onClose();
+  };
+
+  const handleCancel = () => {
+    trackSubscriptionCreateCancelled();
+    handleClose();
   };
 
   const parsedPrice = parseFloat(price);
@@ -61,7 +74,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
 
     const newSub: Subscription = {
       id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 9),
-      icon: icons.wallet,
+      icon: icons.plus,
       name: name.trim(),
       price: parsedPrice,
       billing: frequency,
@@ -74,6 +87,14 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
     };
 
     onCreate(newSub);
+
+    trackSubscriptionCreated({
+      subscription_name: name.trim(),
+      subscription_price: parsedPrice,
+      subscription_frequency: frequency,
+      subscription_category: category,
+    });
+
     handleClose();
   };
 
@@ -83,13 +104,13 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
       transparent
       animationType="slide"
       statusBarTranslucent
-      onRequestClose={handleClose}
+      onRequestClose={handleCancel}
     >
       <View className="modal-overlay justify-end">
         {/* Backdrop touch to dismiss */}
         <Pressable 
           style={StyleSheet.absoluteFill} 
-          onPress={handleClose} 
+          onPress={handleCancel} 
         />
         
         <KeyboardAvoidingView
@@ -98,7 +119,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
         >
           <View className="modal-header">
             <Text className="modal-title">New Subscription</Text>
-            <Pressable className="modal-close" onPress={handleClose}>
+            <Pressable className="modal-close" onPress={handleCancel}>
               <Text className="modal-close-text">✕</Text>
             </Pressable>
           </View>
