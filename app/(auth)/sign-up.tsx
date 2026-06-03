@@ -72,11 +72,13 @@ export default function SignUp() {
       }
 
       if (signUp.status === 'complete') {
-        const userId = signUp.createdSessionId || '';
-        trackSignUpSuccess(userId);
+        let userId = signUp.createdUserId || '';
 
         await signUp.finalize({
           navigate: ({ session, decorateUrl }) => {
+            if (session?.user?.id) {
+              userId = session.user.id;
+            }
             if (session?.currentTask) {
               console.log('Pending session task:', session.currentTask);
               return;
@@ -95,6 +97,8 @@ export default function SignUp() {
             }
           },
         });
+
+        trackSignUpSuccess(userId);
       } else {
         console.warn('Sign-up attempt incomplete status:', signUp.status);
         trackSignUpFailure(`Incomplete status: ${signUp.status}`);

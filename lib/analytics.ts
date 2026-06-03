@@ -1,5 +1,5 @@
 import { usePostHog } from "posthog-react-native";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 // Event veri yapısı tanımları
 export interface SubscriptionAnalyticsPayload {
@@ -14,13 +14,24 @@ export function useAnalytics() {
   const posthog = usePostHog();
   const searchTimeoutRef = useRef<any>(null);
 
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   // --- Kimlik Doğrulama (Auth) Akışları ---
   const trackSignInStart = useCallback(() => {
     posthog.capture("user_sign_in_started");
   }, [posthog]);
 
   const trackSignInSuccess = useCallback((userId: string) => {
-    posthog.identify(userId);
+    if (userId) {
+      posthog.identify(userId);
+    }
     posthog.capture("user_sign_in_completed", { user_id: userId });
   }, [posthog]);
 
@@ -45,7 +56,9 @@ export function useAnalytics() {
   }, [posthog]);
 
   const trackSignUpSuccess = useCallback((userId: string) => {
-    posthog.identify(userId, { signUpMethod: 'email_password' });
+    if (userId) {
+      posthog.identify(userId, { signUpMethod: 'email_password' });
+    }
     posthog.capture("user_signed_up", { user_id: userId });
   }, [posthog]);
 

@@ -41,11 +41,13 @@ export default function SignIn() {
       }
 
       if (signIn.status === 'complete') {
-        const userId = signIn.createdSessionId || '';
-        trackSignInSuccess(userId);
+        let userId = '';
 
         await signIn.finalize({
           navigate: ({ session, decorateUrl }) => {
+            if (session?.user?.id) {
+              userId = session.user.id;
+            }
             if (session?.currentTask) {
               console.log('Pending session task:', session.currentTask);
               return;
@@ -64,6 +66,8 @@ export default function SignIn() {
             }
           },
         });
+
+        trackSignInSuccess(userId);
       } else {
         console.warn('Sign-in status incomplete:', signIn.status);
         trackSignInFailure(`Incomplete status: ${signIn.status}`);
