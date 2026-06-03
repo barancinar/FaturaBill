@@ -4,6 +4,7 @@ import { styled } from 'nativewind';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
+import { useAnalytics } from '@/lib/analytics';
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -11,6 +12,14 @@ export default function SignUp() {
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
+  const { 
+    trackSignUpStart, 
+    trackSignUpFailure, 
+    trackVerificationCodeSent, 
+    trackVerificationCodeSubmitted, 
+    trackSignUpSuccess, 
+    trackAppError 
+  } = useAnalytics();
 
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -22,6 +31,7 @@ export default function SignUp() {
   const handleSubmit = async () => {
     if (!isReady || !emailInput || !passwordInput) return;
 
+    trackSignUpStart();
     try {
       const { error } = await signUp.password({
         emailAddress: emailInput,
@@ -29,32 +39,46 @@ export default function SignUp() {
       });
 
       if (error) {
-        console.error('Sign up error:', JSON.stringify(error, null, 2));
+        const errorMsg = typeof error === 'string' ? error : JSON.stringify(error);
+        console.error('Sign up error:', errorMsg);
+        trackSignUpFailure(errorMsg);
         return;
       }
 
       await signUp.verifications.sendEmailCode();
+      trackVerificationCodeSent();
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
       console.error('Exception during sign-up:', e);
+      trackSignUpFailure(errMsg);
+      trackAppError('sign_up_submit', errMsg);
     }
   };
 
   const handleVerify = async () => {
     if (!isReady || !codeInput) return;
 
+    trackVerificationCodeSubmitted();
     try {
       const { error } = await signUp.verifications.verifyEmailCode({
         code: codeInput,
       });
 
       if (error) {
-        console.error('Verification error:', JSON.stringify(error, null, 2));
+        const errorMsg = typeof error === 'string' ? error : JSON.stringify(error);
+        console.error('Verification error:', errorMsg);
+        trackSignUpFailure(errorMsg);
         return;
       }
 
       if (signUp.status === 'complete') {
+        let userId = signUp.createdUserId || '';
+
         await signUp.finalize({
           navigate: ({ session, decorateUrl }) => {
+            if (session?.user?.id) {
+              userId = session.user.id;
+            }
             if (session?.currentTask) {
               console.log('Pending session task:', session.currentTask);
               return;
@@ -73,11 +97,17 @@ export default function SignUp() {
             }
           },
         });
+
+        trackSignUpSuccess(userId);
       } else {
         console.warn('Sign-up attempt incomplete status:', signUp.status);
+        trackSignUpFailure(`Incomplete status: ${signUp.status}`);
       }
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
       console.error('Exception during verification:', e);
+      trackSignUpFailure(errMsg);
+      trackAppError('sign_up_verify', errMsg);
     }
   };
 
@@ -85,8 +115,11 @@ export default function SignUp() {
     if (!isReady) return;
     try {
       await signUp.verifications.sendEmailCode();
+      trackVerificationCodeSent();
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
       console.error('Exception during resending verification code:', e);
+      trackAppError('sign_up_resend', errMsg);
     }
   };
 

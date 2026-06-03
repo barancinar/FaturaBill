@@ -4,6 +4,7 @@ import { styled } from 'nativewind';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
+import { useAnalytics } from '@/lib/analytics';
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -12,6 +13,7 @@ export default function SignIn() {
   const { signUp } = useSignUp();
   const { isLoaded } = useAuth();
   const router = useRouter();
+  const { trackSignInStart, trackSignInSuccess, trackSignInFailure, trackAppError } = useAnalytics();
 
   console.log("[SignIn] Component rendered", { fetchStatus, hasSignIn: !!signIn, hasErrors: !!errors });
 
@@ -24,6 +26,7 @@ export default function SignIn() {
   const handleSubmit = async () => {
     if (!isReady || !emailInput || !passwordInput) return;
 
+    trackSignInStart();
     try {
       const { error } = await signIn.password({
         emailAddress: emailInput,
@@ -31,13 +34,20 @@ export default function SignIn() {
       });
 
       if (error) {
-        console.error('Sign in error:', JSON.stringify(error, null, 2));
+        const errorMsg = typeof error === 'string' ? error : JSON.stringify(error);
+        console.error('Sign in error:', errorMsg);
+        trackSignInFailure(errorMsg);
         return;
       }
 
       if (signIn.status === 'complete') {
+        let userId = '';
+
         await signIn.finalize({
           navigate: ({ session, decorateUrl }) => {
+            if (session?.user?.id) {
+              userId = session.user.id;
+            }
             if (session?.currentTask) {
               console.log('Pending session task:', session.currentTask);
               return;
@@ -56,11 +66,17 @@ export default function SignIn() {
             }
           },
         });
+
+        trackSignInSuccess(userId);
       } else {
         console.warn('Sign-in status incomplete:', signIn.status);
+        trackSignInFailure(`Incomplete status: ${signIn.status}`);
       }
     } catch (e) {
+      const errMsg = e instanceof Error ? e.message : String(e);
       console.error('Exception during sign-in:', e);
+      trackSignInFailure(errMsg);
+      trackAppError('sign_in', errMsg);
     }
   };
 
