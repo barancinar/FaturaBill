@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { styled } from "nativewind";
-import { usePostHog } from "posthog-react-native";
+import { useAnalytics } from "@/lib/analytics";
 import { Feather } from "@expo/vector-icons";
 
 import SubscriptionCard from "@/components/SubscriptionCard";
@@ -25,7 +25,7 @@ const SafeAreaView = styled(RNSafeAreaView);
 const FILTER_OPTIONS = ["All", ...SUBSCRIPTION_CATEGORIES];
 
 const Subscriptions = () => {
-  const posthog = usePostHog();
+  const { trackSearchPerformed, trackFilterChanged, trackSubscriptionCardExpanded } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
@@ -123,7 +123,7 @@ const Subscriptions = () => {
           value={searchQuery}
           onChangeText={(text) => {
             setSearchQuery(text);
-            posthog.capture("subscription_search_query_changed", { query: text });
+            trackSearchPerformed(text);
           }}
         />
         {searchQuery.length > 0 && (
@@ -148,7 +148,7 @@ const Subscriptions = () => {
                 className={`category-chip ${isActive ? "category-chip-active" : ""}`}
                 onPress={() => {
                   setSelectedFilter(filter);
-                  posthog.capture("subscription_filter_changed", { filter });
+                  trackFilterChanged(filter);
                 }}
               >
                 <Text className={`category-chip-text ${isActive ? "category-chip-text-active" : ""}`}>
@@ -171,12 +171,7 @@ const Subscriptions = () => {
             onPress={() => {
               const isExpanding = expandedSubscriptionId !== item.id;
               if (isExpanding) {
-                posthog.capture("subscription_card_expanded", {
-                  subscription_id: item.id,
-                  subscription_name: item.name,
-                  price: item.price,
-                  currency: item.currency ?? "USD",
-                });
+                trackSubscriptionCardExpanded(item.id, item.name, item.price, item.currency ?? "USD");
               }
               setExpandedSubscriptionId((currentId) => (currentId === item.id ? null : item.id));
             }}

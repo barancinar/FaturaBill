@@ -10,8 +10,8 @@ import { formatCurrency } from "@/lib/utils";
 import { useUser } from "@clerk/expo";
 import dayjs from "dayjs";
 import { styled } from "nativewind";
-import { usePostHog } from "posthog-react-native";
-import { useState } from "react";
+import { useAnalytics } from "@/lib/analytics";
+import { useState, useEffect } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
@@ -20,10 +20,27 @@ const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
     const { user } = useUser();
-    const posthog = usePostHog();
+    const { trackSubscriptionCardExpanded, updateUserProperties } = useAnalytics();
     const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([...HOME_SUBSCRIPTIONS]);
     const [modalVisible, setModalVisible] = useState(false);
+
+    // Calculate total spend & active count, and update user properties in PostHog
+    useEffect(() => {
+        let activeCount = 0;
+        let totalSpend = 0;
+        subscriptions.forEach(sub => {
+            if (sub.status === 'active') {
+                activeCount++;
+            }
+            if (sub.status !== 'cancelled') {
+                const isYearly = sub.billing?.toLowerCase() === 'yearly';
+                const monthlyEquivalent = isYearly ? sub.price / 12 : sub.price;
+                totalSpend += monthlyEquivalent;
+            }
+        });
+        updateUserProperties(totalSpend, activeCount);
+    }, [subscriptions, updateUserProperties]);
 
     const emailAddress = user?.emailAddresses?.[0]?.emailAddress;
     const fallbackName = emailAddress ? emailAddress.split('@')[0] : '';
@@ -93,12 +110,7 @@ export default function App() {
                             onPress={() => {
                                 const isExpanding = expandedSubscriptionId !== item.id;
                                 if (isExpanding) {
-                                    posthog.capture("subscription_card_expanded", {
-                                        subscription_id: item.id,
-                                        subscription_name: item.name,
-                                        price: item.price,
-                                        currency: item.currency ?? "USD",
-                                    });
+                                    trackSubscriptionCardExpanded(item.id, item.name, item.price, item.currency ?? "USD");
                                 }
                                 setExpandedSubscriptionId((currentId) => (currentId === item.id ? null : item.id));
                             }}

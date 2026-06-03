@@ -44,6 +44,14 @@ function InitialLayout() {
     }
   }, [isLoaded, isSignedIn, userId, posthog]);
 
+  // Automatic Screen View Tracking
+  useEffect(() => {
+    if (isLoaded && segments.length > 0) {
+      const screenName = segments.join('/');
+      posthog.screen(screenName);
+    }
+  }, [segments, isLoaded, posthog]);
+
   useEffect(() => {
     console.log("[InitialLayout] Effect running", { isLoaded, isSignedIn, segments, navReady: !!navigationState?.key });
     if (!isLoaded || !navigationState?.key) return;

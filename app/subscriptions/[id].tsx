@@ -1,9 +1,18 @@
 import { Link, useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Text, View } from 'react-native';
+import { useAnalytics } from '@/lib/analytics';
 
 const SubscriptionDetails = () => {
     const {id} = useLocalSearchParams<{id: string}>();
+    const { trackSubscriptionDetailsViewed } = useAnalytics();
+
+    useEffect(() => {
+        if (id) {
+            trackSubscriptionDetailsViewed(id);
+        }
+    }, [id, trackSubscriptionDetailsViewed]);
+
   return (
     <View>
       <Text>SubscriptionDetails: {id}</Text>
