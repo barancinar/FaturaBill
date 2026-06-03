@@ -60,7 +60,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
       : dayjs().add(1, 'year').toISOString();
 
     const newSub: Subscription = {
-      id: Date.now().toString(),
+      id: Date.now().toString() + '-' + Math.random().toString(36).substring(2, 9),
       icon: icons.wallet,
       name: name.trim(),
       price: parsedPrice,
@@ -72,9 +72,6 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
       color: CATEGORY_COLORS[category] || '#e2e8f0',
       currency: 'USD',
     };
-
-    // Include frequency field specifically as requested
-    (newSub as any).frequency = frequency;
 
     onCreate(newSub);
     handleClose();
