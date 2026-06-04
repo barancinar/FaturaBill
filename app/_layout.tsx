@@ -1,4 +1,5 @@
 import "@/global.css";
+import "@/lib/i18n";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack, useRouter, useSegments, useRootNavigationState } from "expo-router";
 import { useEffect } from "react";

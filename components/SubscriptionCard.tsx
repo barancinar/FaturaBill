@@ -14,8 +14,8 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
   // Load translations dynamically for Card
   React.useEffect(() => {
     if (i18n.isInitialized) {
-      i18n.addResourceBundle('en', 'translation', { card: { viewDetails: "View Details" } }, true, false);
-      i18n.addResourceBundle('tr', 'translation', { card: { viewDetails: "Detayları Gör" } }, true, false);
+      i18n.addResourceBundle('en', 'translation', { card: { viewDetails: "View Details" } }, true, true);
+      i18n.addResourceBundle('tr', 'translation', { card: { viewDetails: "Detayları Gör" } }, true, true);
     }
   }, []);
 
