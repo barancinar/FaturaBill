@@ -1,5 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
+import React, { useState, useMemo } from 'react';
 
 import { 
   Text, 
@@ -15,8 +14,8 @@ import { useAnalytics } from "@/lib/analytics";
 import { Feather } from "@expo/vector-icons";
 
 import SubscriptionCard from "@/components/SubscriptionCard";
-import { HOME_SUBSCRIPTIONS } from "@/constants/data";
 import { formatCurrency } from "@/lib/utils";
+import { useSubscriptions } from "@/lib/store";
 import { SUBSCRIPTION_CATEGORIES } from "@/constants/subscriptions";
 import "@/global.css";
 
@@ -29,13 +28,7 @@ const Subscriptions = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([...HOME_SUBSCRIPTIONS]);
-
-  useFocusEffect(
-    useCallback(() => {
-      setSubscriptions([...HOME_SUBSCRIPTIONS]);
-    }, [])
-  );
+  const subscriptions = useSubscriptions();
 
 
   // Calculate statistics based on current active/paused status

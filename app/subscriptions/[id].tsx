@@ -10,27 +10,19 @@ import { Alert, Image, ScrollView, Switch, Text, TextInput, TouchableOpacity, Vi
 import clsx from 'clsx';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
-import { HOME_SUBSCRIPTIONS } from '@/constants/data';
 import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions';
 import "@/global.css";
 import { formatCurrency, formatSubscriptionDateTime } from '@/lib/utils';
+import { getSubscriptions, updateSubscription, deleteSubscription } from '@/lib/store';
 
 const SafeAreaView = styled(RNSafeAreaView);
 
-// i18n initialization check
-if (!i18n.isInitialized) {
-  i18n.use(initReactI18next).init({
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-    resources: {
-      en: { translation: {} },
-      tr: { translation: {} },
-    },
-  });
-}
+const ALLOWED_CURRENCIES = ['USD', 'TRY', 'EUR'] as const;
+type CurrencyType = typeof ALLOWED_CURRENCIES[number];
+
+const isValidCurrency = (val: any): val is CurrencyType => {
+  return typeof val === 'string' && (ALLOWED_CURRENCIES as readonly string[]).includes(val);
+};
 
 const enResources = {
   details: {
@@ -129,7 +121,7 @@ const SubscriptionDetails = () => {
   // Form State variables
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
-  const [currency, setCurrency] = useState<'USD' | 'TRY' | 'EUR'>('USD');
+  const [currency, setCurrency] = useState<CurrencyType>('USD');
   const [billing, setBilling] = useState('Monthly');
   const [category, setCategory] = useState('Entertainment');
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -138,13 +130,13 @@ const SubscriptionDetails = () => {
 
   // Fetch subscription from global list on mount / focus
   useEffect(() => {
-    const found = HOME_SUBSCRIPTIONS.find(s => s.id === id);
+    const found = getSubscriptions().find(s => s.id === id);
     if (found) {
       setSub(found);
       // Initialize form variables
       setName(found.name);
       setPrice(found.price.toString());
-      setCurrency((found.currency as any) || 'USD');
+      setCurrency(isValidCurrency(found.currency) ? found.currency : 'USD');
       setBilling(found.billing);
       setCategory(found.category || 'Other');
       setPaymentMethod(found.paymentMethod || '');
@@ -198,11 +190,8 @@ const SubscriptionDetails = () => {
       color: CATEGORY_COLORS[category] || '#e2e8f0'
     };
 
-    // Update in global array
-    const index = HOME_SUBSCRIPTIONS.findIndex(s => s.id === id);
-    if (index > -1) {
-      HOME_SUBSCRIPTIONS[index] = updatedSub;
-    }
+    // Update in global store
+    updateSubscription(id, updatedSub);
 
     setSub(updatedSub);
     setIsEditing(false);
@@ -219,10 +208,7 @@ const SubscriptionDetails = () => {
           text: t('details.deleteConfirmYes', 'Delete'),
           style: 'destructive',
           onPress: () => {
-            const index = HOME_SUBSCRIPTIONS.findIndex(s => s.id === id);
-            if (index > -1) {
-              HOME_SUBSCRIPTIONS.splice(index, 1);
-            }
+            deleteSubscription(id);
             posthog.capture("subscription_deleted", { id, name: sub.name });
             router.replace("/");
           }
@@ -237,10 +223,7 @@ const SubscriptionDetails = () => {
       status: newStatus
     };
 
-    const index = HOME_SUBSCRIPTIONS.findIndex(s => s.id === id);
-    if (index > -1) {
-      HOME_SUBSCRIPTIONS[index] = updatedSub;
-    }
+    updateSubscription(id, updatedSub);
 
     setSub(updatedSub);
     posthog.capture("subscription_status_changed", { id, status: newStatus });

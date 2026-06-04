@@ -2,7 +2,8 @@ import CreateSubscriptionModal from "@/components/CreateSubscriptionModal";
 import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
-import { HOME_BALANCE, HOME_SUBSCRIPTIONS, HOME_USER, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
+import { HOME_BALANCE, HOME_USER, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
+import { useSubscriptions, addSubscription } from "@/lib/store";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import "@/global.css";
@@ -22,7 +23,7 @@ export default function App() {
     const { user } = useUser();
     const { trackSubscriptionCardExpanded, updateUserProperties } = useAnalytics();
     const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
-    const [subscriptions, setSubscriptions] = useState<Subscription[]>([...HOME_SUBSCRIPTIONS]);
+    const subscriptions = useSubscriptions();
     const [modalVisible, setModalVisible] = useState(false);
 
     // Calculate total spend & active count, and update user properties in PostHog
@@ -47,12 +48,7 @@ export default function App() {
     const displayName = user?.firstName || fallbackName || HOME_USER.name;
 
     const handleCreateSubscription = (newSub: Subscription) => {
-        setSubscriptions((prev) => {
-            const newList = [newSub, ...prev];
-            HOME_SUBSCRIPTIONS.length = 0;
-            HOME_SUBSCRIPTIONS.push(...newList);
-            return newList;
-        });
+        addSubscription(newSub);
     };
 
     return (

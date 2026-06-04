@@ -1,37 +1,23 @@
 import { styled } from "nativewind";
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from 'expo-router';
 import { Feather } from "@expo/vector-icons";
 import dayjs from 'dayjs';
 import { useTranslation, initReactI18next } from 'react-i18next';
 import i18n from 'i18next';
 import { PieChart } from 'react-native-gifted-charts';
 
-import { HOME_SUBSCRIPTIONS } from "@/constants/data";
 import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions';
 import { formatCurrency } from '@/lib/utils';
 import { colors } from '@/constants/theme';
+import { useSubscriptions } from "@/lib/store";
 import clsx from 'clsx';
 import "@/global.css";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
-// Safe check to initialize i18n dynamically if not already initialized
-if (!i18n.isInitialized) {
-  i18n.use(initReactI18next).init({
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-    resources: {
-      en: { translation: {} },
-      tr: { translation: {} },
-    },
-  });
-}
+
 
 // English translation dictionary
 const enResources = {
@@ -49,6 +35,7 @@ const enResources = {
     mostExpensive: "Most Expensive",
     noSubscription: "None",
     categoryDistribution: "Category Distribution",
+    categoryBreakdown: "Category Breakdown",
     smartInsights: "Smart Insights",
     upcomingRenewals: "Upcoming Renewals",
     renewingToday: "Renewing today",
@@ -88,6 +75,7 @@ const trResources = {
     mostExpensive: "En Yüksek Tutar",
     noSubscription: "Yok",
     categoryDistribution: "Kategori Dağılımı",
+    categoryBreakdown: "Kategori Kırılımı",
     smartInsights: "Akıllı Öneriler",
     upcomingRenewals: "Yaklaşan Ödemeler",
     renewingToday: "Bugün yenileniyor",
@@ -142,9 +130,27 @@ const convertCurrency = (amount: number, from: string = 'USD', to: string = 'TRY
   return amountInTry / rateTo;
 };
 
+// Helper to normalize and convert subscription price based on billing period and preferred currency
+const normalizeSubscriptionPrice = (
+  sub: Subscription | null,
+  period: 'Monthly' | 'Yearly',
+  preferredCurrency: string
+): number => {
+  if (!sub) return 0;
+  const subCurrency = sub.currency || 'USD';
+  const priceInPreferred = convertCurrency(sub.price, subCurrency, preferredCurrency);
+  const isYearly = sub.billing?.toLowerCase() === 'yearly';
+  
+  if (period === 'Monthly') {
+    return isYearly ? priceInPreferred / 12 : priceInPreferred;
+  } else {
+    return isYearly ? priceInPreferred : priceInPreferred * 12;
+  }
+};
+
 const Insights = () => {
   const { t } = useTranslation();
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const subscriptions = useSubscriptions();
   const [period, setPeriod] = useState<'Monthly' | 'Yearly'>('Monthly');
   const [preferredCurrency, setPreferredCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
 
@@ -158,13 +164,6 @@ const Insights = () => {
     const nextLang = i18n.language === 'tr' ? 'en' : 'tr';
     i18n.changeLanguage(nextLang);
   };
-
-  // Load subscriptions from data source whenever screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      setSubscriptions([...HOME_SUBSCRIPTIONS]);
-    }, [])
-  );
 
   // Calculate analytics
   const stats = useMemo(() => {
@@ -396,7 +395,7 @@ const Insights = () => {
       totalSpend,
       averageBill,
       highestSub,
-      highestSubPrice: highestSub ? (period === 'Monthly' ? (highestSub.billing?.toLowerCase() === 'yearly' ? convertCurrency(highestSub.price, highestSub.currency || 'USD', preferredCurrency) / 12 : convertCurrency(highestSub.price, highestSub.currency || 'USD', preferredCurrency)) : (highestSub.billing?.toLowerCase() === 'yearly' ? convertCurrency(highestSub.price, highestSub.currency || 'USD', preferredCurrency) : convertCurrency(highestSub.price, highestSub.currency || 'USD', preferredCurrency) * 12)) : 0,
+      highestSubPrice: normalizeSubscriptionPrice(highestSub, period, preferredCurrency),
       activeCount,
       pausedCount,
       categoryBreakdown,
@@ -584,7 +583,7 @@ const Insights = () => {
         {/* Category List Details (Fallback / Standard layout) */}
         <View className="bg-card border border-border rounded-3xl p-5 mb-6">
           <Text className="text-lg font-sans-bold text-primary mb-4">
-            {t('insights.categoryDistribution', 'Category Distribution')}
+            {t('insights.categoryBreakdown', 'Category Breakdown')}
           </Text>
           {stats.categoryBreakdown.length === 0 ? (
             <Text className="text-sm font-sans-medium text-muted-foreground text-center py-4">
