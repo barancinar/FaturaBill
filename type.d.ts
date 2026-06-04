@@ -23,9 +23,10 @@ interface Subscription {
     billing: string;
     renewalDate?: string;
     color?: string;
+    isTrial?: boolean;
 }
 
-interface SubscriptionCardProps extends Omit<Subscription, "id"> {
+interface SubscriptionCardProps extends Subscription {
     expanded: boolean;
     onPress: () => void;
     onCancelPress?: () => void;

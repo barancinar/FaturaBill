@@ -1,11 +1,26 @@
 import { formatCurrency, formatStatusLabel, formatSubscriptionDateTime } from '@/lib/utils'
 import clsx from 'clsx'
 import React from 'react'
-import { Image, Pressable, Text, View } from 'react-native'
+import { Image, Pressable, Text, View, TouchableOpacity } from 'react-native'
+import { useRouter } from 'expo-router'
+import { Feather } from '@expo/vector-icons'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 
-const SubscriptionCard = ({name, price, currency, icon, billing, color, category, plan, renewalDate,expanded, onPress, paymentMethod, startDate, status}: SubscriptionCardProps) => {
+const SubscriptionCard = ({id, name, price, currency, icon, billing, color, category, plan, renewalDate, expanded, onPress, paymentMethod, startDate, status}: SubscriptionCardProps) => {
+  const router = useRouter();
+  const { t } = useTranslation();
+
+  // Load translations dynamically for Card
+  React.useEffect(() => {
+    if (i18n.isInitialized) {
+      i18n.addResourceBundle('en', 'translation', { card: { viewDetails: "View Details" } }, true, false);
+      i18n.addResourceBundle('tr', 'translation', { card: { viewDetails: "Detayları Gör" } }, true, false);
+    }
+  }, []);
+
   return (
-    <Pressable  onPress={onPress} className={clsx('sub-card', expanded ? 'sub-card-expanded' : 'bg-card')} style={!expanded && color ? {backgroundColor:color}:undefined}>
+    <Pressable onPress={onPress} className={clsx('sub-card', expanded ? 'sub-card-expanded' : 'bg-card')} style={!expanded && color ? {backgroundColor:color}:undefined}>
       <View className='sub-head'>
         <View className="sub-main">
             <Image source={icon} className="sub-icon" />
@@ -56,6 +71,17 @@ const SubscriptionCard = ({name, price, currency, icon, billing, color, category
                         </View>
                     </View>
                 </View>
+
+                {/* View Details Button to detailed screen */}
+                <TouchableOpacity 
+                    onPress={() => router.push(`/subscriptions/${id}`)}
+                    className="mt-4 bg-primary/10 border border-primary/20 rounded-xl py-3.5 items-center justify-center flex-row gap-2"
+                >
+                    <Text className="text-base font-sans-bold text-primary">
+                      {t('card.viewDetails', 'View Details')}
+                    </Text>
+                    <Feather name="arrow-right" size={14} color="#081126" />
+                </TouchableOpacity>
             </View>
         )}
 

@@ -1,4 +1,5 @@
 import { icons } from "./icons";
+import dayjs from "dayjs";
 
 export const tabs: AppTab[] = [
     { name: "index", title: "Home", icon: icons.home },
@@ -103,5 +104,37 @@ export const HOME_SUBSCRIPTIONS: Subscription[] = [
         billing: "Yearly",
         renewalDate: "2026-04-02T10:00:00.000Z",
         color: "#b8e8d0",
+    },
+    {
+        id: "chatgpt-plus",
+        icon: icons.openai,
+        name: "ChatGPT Plus",
+        plan: "Plus Plan",
+        category: "AI Tools",
+        paymentMethod: "Visa ending in 4242",
+        status: "active",
+        startDate: dayjs().subtract(28, "day").toISOString(),
+        price: 20.0,
+        currency: "USD",
+        billing: "Monthly",
+        renewalDate: dayjs().add(2, "day").toISOString(),
+        color: "#d0ebff",
+        isTrial: true,
+    },
+    {
+        id: "midjourney",
+        icon: icons.openai,
+        name: "Midjourney",
+        plan: "Basic Plan",
+        category: "AI Tools",
+        paymentMethod: "Mastercard ending in 9988",
+        status: "active",
+        startDate: dayjs().subtract(25, "day").toISOString(),
+        price: 30.0,
+        currency: "USD",
+        billing: "Monthly",
+        renewalDate: dayjs().add(5, "day").toISOString(),
+        color: "#ffd1d1",
+        isTrial: false,
     },
 ];
