@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { 
   Text, 
@@ -24,6 +25,7 @@ const SafeAreaView = styled(RNSafeAreaView);
 const FILTER_OPTIONS = ["All", ...SUBSCRIPTION_CATEGORIES];
 
 const Subscriptions = () => {
+  const { t } = useTranslation();
   const { trackSearchPerformed, trackFilterChanged, trackSubscriptionCardExpanded } = useAnalytics();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -85,22 +87,30 @@ const Subscriptions = () => {
     <SafeAreaView className="flex-1 bg-background p-5">
       {/* Header Title */}
       <View className="mb-4">
-        <Text className="text-3xl font-sans-bold text-primary">Subscriptions</Text>
+        <Text className="text-3xl font-sans-bold text-primary">
+          {t("subscriptions.title", { defaultValue: "Subscriptions" })}
+        </Text>
       </View>
 
       {/* Stats Cards */}
       <View className="flex-row gap-4 mb-5">
         <View className="flex-1 bg-primary rounded-2xl p-4 justify-between min-h-[90]">
-          <Text className="text-xs font-sans-semibold text-white/60 uppercase tracking-wider">Monthly Spend</Text>
+          <Text className="text-xs font-sans-semibold text-white/60 uppercase tracking-wider">
+            {t("subscriptions.monthlySpend", { defaultValue: "Monthly Spend" })}
+          </Text>
           <Text className="text-2xl font-sans-extrabold text-white">{formatCurrency(totalMonthly)}</Text>
         </View>
         <View className="flex-row gap-2 flex-1">
           <View className="flex-1 bg-card border border-border rounded-2xl p-3 justify-between items-center">
-            <Text className="text-xs font-sans-semibold text-muted-foreground uppercase">Active</Text>
+            <Text className="text-xs font-sans-semibold text-muted-foreground uppercase">
+              {t("subscriptions.active", { defaultValue: "Active" })}
+            </Text>
             <Text className="text-xl font-sans-bold text-success">{activeCount}</Text>
           </View>
           <View className="flex-1 bg-card border border-border rounded-2xl p-3 justify-between items-center">
-            <Text className="text-xs font-sans-semibold text-muted-foreground uppercase">Paused</Text>
+            <Text className="text-xs font-sans-semibold text-muted-foreground uppercase">
+              {t("subscriptions.paused", { defaultValue: "Paused" })}
+            </Text>
             <Text className="text-xl font-sans-bold text-accent">{pausedCount}</Text>
           </View>
         </View>
@@ -111,7 +121,7 @@ const Subscriptions = () => {
         <Feather name="search" size={20} color="rgba(0, 0, 0, 0.4)" />
         <TextInput
           className="flex-1 ml-2 text-base font-sans-medium text-primary"
-          placeholder="Search subscriptions, categories..."
+          placeholder={t("subscriptions.searchPlaceholder", { defaultValue: "Search subscriptions, categories..." })}
           placeholderTextColor="rgba(0, 0, 0, 0.4)"
           value={searchQuery}
           onChangeText={(text) => {
@@ -145,7 +155,11 @@ const Subscriptions = () => {
                 }}
               >
                 <Text className={`category-chip-text ${isActive ? "category-chip-text-active" : ""}`}>
-                  {filter}
+                  {filter === "All" 
+                    ? t("subscriptions.allFilter", { defaultValue: "All" }) 
+                    : SUBSCRIPTION_CATEGORIES.includes(filter) 
+                      ? t(`categories.${filter}`, { defaultValue: filter }) 
+                      : filter}
                 </Text>
               </TouchableOpacity>
             );
@@ -178,10 +192,10 @@ const Subscriptions = () => {
           <View className="items-center justify-center py-12 px-4">
             <Feather name="search" size={48} color="rgba(0, 0, 0, 0.2)" className="mb-4" />
             <Text className="text-lg font-sans-bold text-primary text-center mb-1">
-              No subscriptions found
+              {t("subscriptions.noSubscriptionsFound", { defaultValue: "No subscriptions found" })}
             </Text>
             <Text className="text-sm font-sans-medium text-muted-foreground text-center mb-4">
-              {"Try adjusting your search query or filter to find what you're looking for."}
+              {t("subscriptions.adjustSearchQuery", { defaultValue: "Try adjusting your search query or filter to find what you're looking for." })}
             </Text>
             {(searchQuery || selectedFilter !== "All") && (
               <TouchableOpacity
@@ -191,7 +205,9 @@ const Subscriptions = () => {
                   setSelectedFilter("All");
                 }}
               >
-                <Text className="text-white font-sans-semibold">Reset Search</Text>
+                <Text className="text-white font-sans-semibold">
+                  {t("subscriptions.resetSearch", { defaultValue: "Reset Search" })}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
