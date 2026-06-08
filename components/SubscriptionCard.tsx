@@ -5,10 +5,32 @@ import { Image, Pressable, Text, View, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import { useTranslation } from 'react-i18next'
+import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions'
 
 const SubscriptionCard = ({id, name, price, currency, icon, billing, color, category, plan, renewalDate, expanded, onPress, paymentMethod, startDate, status}: SubscriptionCardProps) => {
   const router = useRouter();
   const { t } = useTranslation();
+
+  const getCategoryLabel = (cat?: string) => {
+    const trimmed = cat?.trim();
+    if (trimmed && SUBSCRIPTION_CATEGORIES.includes(trimmed)) {
+      return t(`categories.${trimmed}`, { defaultValue: trimmed });
+    }
+    return trimmed || undefined;
+  };
+
+  const getStatusLabel = (statusVal?: string) => {
+    switch (statusVal) {
+      case 'active':
+        return t('common.active', { defaultValue: 'Active' });
+      case 'paused':
+        return t('common.paused', { defaultValue: 'Paused' });
+      case 'cancelled':
+        return t('common.cancelled', { defaultValue: 'Cancelled' });
+      default:
+        return t('card.na', { defaultValue: 'N/A' });
+    }
+  };
 
   // Centralized translations are loaded from lib/i18n
 
@@ -20,7 +42,7 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
             <View className="sub-copy">
                 <Text numberOfLines={1} className="sub-title">{name}</Text>
                 <Text numberOfLines={1} ellipsizeMode='tail' className='sub-meta'>
-                    {category?.trim() ? t(`categories.${category.trim()}`, { defaultValue: category.trim() }) : plan?.trim() || (renewalDate ? formatSubscriptionDateTime(renewalDate): '')}
+                    {getCategoryLabel(category) || plan?.trim() || (renewalDate ? formatSubscriptionDateTime(renewalDate): '')}
                 </Text>
             </View>
         </View>
@@ -47,7 +69,7 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
                         <View className="sub-row-copy">
                             <Text className="sub-label">{t('card.category', { defaultValue: 'Category:' })}</Text>
                             <Text className="sub-value" numberOfLines={1} ellipsizeMode='tail'>
-                              {category?.trim() ? t(`categories.${category.trim()}`, { defaultValue: category.trim() }) : plan?.trim() || t('card.na', { defaultValue: 'N/A' })}
+                              {getCategoryLabel(category) || plan?.trim() || t('card.na', { defaultValue: 'N/A' })}
                             </Text>
                         </View>
                     </View>
@@ -71,7 +93,7 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
                         <View className="sub-row-copy">
                             <Text className="sub-label">{t('card.status', { defaultValue: 'Status:' })}</Text>
                             <Text className="sub-value" numberOfLines={1} ellipsizeMode='tail'>
-                              {status ? (status === 'active' ? t('common.active', { defaultValue: 'Active' }) : status === 'paused' ? t('common.paused', { defaultValue: 'Paused' }) : t('common.cancelled', { defaultValue: 'Cancelled' })) : t('card.na', { defaultValue: 'N/A' })}
+                              {getStatusLabel(status)}
                             </Text>
                         </View>
                     </View>

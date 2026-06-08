@@ -39,7 +39,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 const SubscriptionDetails = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const posthog = usePostHog();
 
   // Component loading states
@@ -92,7 +92,7 @@ const SubscriptionDetails = () => {
     );
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const parsedPrice = parseFloat(price);
     if (!name.trim() || isNaN(parsedPrice) || parsedPrice <= 0) {
       Alert.alert(t("details.error", { defaultValue: "Error" }), t("details.errorFillFields", { defaultValue: "Please provide a valid name and price." }));
@@ -123,12 +123,19 @@ const SubscriptionDetails = () => {
       color: CATEGORY_COLORS[category] || '#e2e8f0'
     };
 
-    // Update in global store
-    updateSubscription(id, updatedSub);
-
-    setSub(updatedSub);
-    setIsEditing(false);
-    posthog.capture("subscription_updated", { id, name: name.trim(), price: parsedPrice });
+    try {
+      // Update in global store
+      await updateSubscription(id, updatedSub);
+      setSub(updatedSub);
+      setIsEditing(false);
+      posthog.capture("subscription_updated", { id, name: name.trim(), price: parsedPrice });
+    } catch (error) {
+      console.error("Failed to save subscription in SQLite:", error);
+      Alert.alert(
+        t("details.error", { defaultValue: "Error" }),
+        t("details.errorSaveFailed", { defaultValue: "Failed to save subscription. Please try again." })
+      );
+    }
   };
 
   const handleDelete = () => {
@@ -140,26 +147,41 @@ const SubscriptionDetails = () => {
         {
           text: t('details.deleteConfirmYes', 'Delete'),
           style: 'destructive',
-          onPress: () => {
-            deleteSubscription(id);
-            posthog.capture("subscription_deleted", { id, name: sub.name });
-            router.replace("/");
+          onPress: async () => {
+            try {
+              await deleteSubscription(id);
+              posthog.capture("subscription_deleted", { id, name: sub.name });
+              router.replace("/");
+            } catch (error) {
+              console.error("Failed to delete subscription in SQLite:", error);
+              Alert.alert(
+                t("details.error", { defaultValue: "Error" }),
+                t("details.errorDeleteFailed", { defaultValue: "Failed to delete subscription. Please try again." })
+              );
+            }
           }
         }
       ]
     );
   };
 
-  const handleToggleStatus = (newStatus: 'active' | 'paused' | 'cancelled') => {
+  const handleToggleStatus = async (newStatus: 'active' | 'paused' | 'cancelled') => {
     const updatedSub: Subscription = {
       ...sub,
       status: newStatus
     };
 
-    updateSubscription(id, updatedSub);
-
-    setSub(updatedSub);
-    posthog.capture("subscription_status_changed", { id, status: newStatus });
+    try {
+      await updateSubscription(id, updatedSub);
+      setSub(updatedSub);
+      posthog.capture("subscription_status_changed", { id, status: newStatus });
+    } catch (error) {
+      console.error("Failed to update status in SQLite:", error);
+      Alert.alert(
+        t("details.error", { defaultValue: "Error" }),
+        t("details.errorUpdateStatus", { defaultValue: "Failed to update subscription status. Please try again." })
+      );
+    }
   };
 
   // Calculations for Trial countdown
@@ -230,7 +252,7 @@ const SubscriptionDetails = () => {
             <Text className="text-4xl font-sans-extrabold text-primary mb-2">
               {formatCurrency(sub.price, sub.currency || 'USD')}
               <Text className="text-base font-sans-semibold text-primary/70">
-                /{sub.billing === "Monthly" ? t('common.monthly', { defaultValue: 'Monthly' }).toLowerCase() : t('common.yearly', { defaultValue: 'Yearly' }).toLowerCase()}
+                /{sub.billing === "Monthly" ? t('common.monthly', { defaultValue: 'Monthly' }).toLocaleLowerCase(i18n.language) : t('common.yearly', { defaultValue: 'Yearly' }).toLocaleLowerCase(i18n.language)}
               </Text>
             </Text>
           )}

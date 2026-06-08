@@ -314,7 +314,8 @@ const Insights = () => {
       recommendations,
       timeline: activeSubsForTimeline
     };
-  }, [subscriptions, period, preferredCurrency, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subscriptions, period, preferredCurrency]);
 
   // Formatted Pie Chart data
   const chartData = useMemo(() => {
