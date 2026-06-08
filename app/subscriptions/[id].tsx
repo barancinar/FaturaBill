@@ -1,11 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import i18n from 'i18next';
 import { styled } from 'nativewind';
 import { usePostHog } from 'posthog-react-native';
 import React, { useEffect, useState } from 'react';
-import { initReactI18next, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { Alert, Image, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import clsx from 'clsx';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
@@ -24,73 +23,7 @@ const isValidCurrency = (val: any): val is CurrencyType => {
   return typeof val === 'string' && (ALLOWED_CURRENCIES as readonly string[]).includes(val);
 };
 
-const enResources = {
-  details: {
-    title: "Subscription Details",
-    edit: "Edit",
-    save: "Save",
-    delete: "Delete",
-    deleteConfirmTitle: "Delete Subscription",
-    deleteConfirmDesc: "Are you sure you want to delete this subscription?",
-    deleteConfirmYes: "Delete",
-    deleteConfirmNo: "Cancel",
-    cancel: "Cancel",
-    pause: "Pause",
-    resume: "Resume",
-    cancelSubscription: "Cancel Subscription",
-    activeStatus: "Active",
-    pausedStatus: "Paused",
-    cancelledStatus: "Cancelled",
-    trialCountdown_one: "{{count}} day left of trial",
-    trialCountdown_other: "{{count}} days left of trial",
-    trialExpired: "Trial expired",
-    regularSubscription: "Regular Subscription",
-    fields: {
-      name: "Name",
-      price: "Price",
-      currency: "Currency",
-      billing: "Billing Cycle",
-      category: "Category",
-      paymentMethod: "Payment Method",
-      renewalDate: "Next Renewal Date (YYYY-MM-DD)",
-      isTrial: "Trial Subscription"
-    }
-  }
-};
-
-const trResources = {
-  details: {
-    title: "Abonelik Detayları",
-    edit: "Düzenle",
-    save: "Kaydet",
-    delete: "Sil",
-    deleteConfirmTitle: "Aboneliği Sil",
-    deleteConfirmDesc: "Bu aboneliği silmek istediğinize emin misiniz?",
-    deleteConfirmYes: "Sil",
-    deleteConfirmNo: "Vazgeç",
-    cancel: "Vazgeç",
-    pause: "Duraklat",
-    resume: "Sürdür",
-    cancelSubscription: "Aboneliği İptal Et",
-    activeStatus: "Aktif",
-    pausedStatus: "Duraklatıldı",
-    cancelledStatus: "İptal Edildi",
-    trialCountdown_one: "Deneme süresine {{count}} gün kaldı",
-    trialCountdown_other: "Deneme süresine {{count}} gün kaldı",
-    trialExpired: "Deneme süresi bitti",
-    regularSubscription: "Normal Abonelik",
-    fields: {
-      name: "İsim",
-      price: "Fiyat",
-      currency: "Para Birimi",
-      billing: "Ödeme Döngüsü",
-      category: "Kategori",
-      paymentMethod: "Ödeme Yöntemi",
-      renewalDate: "Sonraki Yenileme Tarihi (YYYY-MM-DD)",
-      isTrial: "Deneme Sürümü"
-    }
-  }
-};
+// Centralized translation resource dictionaries are configured in lib/i18n
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Entertainment": "#ffd1d1",
@@ -106,14 +39,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 const SubscriptionDetails = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const posthog = usePostHog();
 
-  // Load translations dynamically
-  useEffect(() => {
-    i18n.addResourceBundle('en', 'translation', enResources, true, true);
-    i18n.addResourceBundle('tr', 'translation', trResources, true, true);
-  }, []);
+  // Component loading states
 
   const [sub, setSub] = useState<Subscription | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -148,21 +77,25 @@ const SubscriptionDetails = () => {
   if (!sub) {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center p-5">
-        <Text className="text-lg font-sans-bold text-primary">Subscription not found</Text>
+        <Text className="text-lg font-sans-bold text-primary">
+          {t('details.subscriptionNotFound', { defaultValue: 'Subscription not found' })}
+        </Text>
         <TouchableOpacity
           onPress={() => router.back()}
           className="mt-4 px-6 py-3 bg-primary rounded-full"
         >
-          <Text className="text-white font-sans-semibold">Back</Text>
+          <Text className="text-white font-sans-semibold">
+            {t('details.back', { defaultValue: 'Back' })}
+          </Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const parsedPrice = parseFloat(price);
     if (!name.trim() || isNaN(parsedPrice) || parsedPrice <= 0) {
-      Alert.alert("Error", "Please provide a valid name and price.");
+      Alert.alert(t("details.error", { defaultValue: "Error" }), t("details.errorFillFields", { defaultValue: "Please provide a valid name and price." }));
       return;
     }
 
@@ -171,7 +104,7 @@ const SubscriptionDetails = () => {
     let finalRenewalDate = sub.renewalDate;
     if (renewalDate) {
       if (!parsedDate.isValid()) {
-        Alert.alert("Error", "Please input date in YYYY-MM-DD format.");
+        Alert.alert(t("details.error", { defaultValue: "Error" }), t("details.errorDateFormat", { defaultValue: "Please input date in YYYY-MM-DD format." }));
         return;
       }
       finalRenewalDate = parsedDate.toISOString();
@@ -190,12 +123,19 @@ const SubscriptionDetails = () => {
       color: CATEGORY_COLORS[category] || '#e2e8f0'
     };
 
-    // Update in global store
-    updateSubscription(id, updatedSub);
-
-    setSub(updatedSub);
-    setIsEditing(false);
-    posthog.capture("subscription_updated", { id, name: name.trim(), price: parsedPrice });
+    try {
+      // Update in global store
+      await updateSubscription(id, updatedSub);
+      setSub(updatedSub);
+      setIsEditing(false);
+      posthog.capture("subscription_updated", { id, name: name.trim(), price: parsedPrice });
+    } catch (error) {
+      console.error("Failed to save subscription in SQLite:", error);
+      Alert.alert(
+        t("details.error", { defaultValue: "Error" }),
+        t("details.errorSaveFailed", { defaultValue: "Failed to save subscription. Please try again." })
+      );
+    }
   };
 
   const handleDelete = () => {
@@ -207,26 +147,41 @@ const SubscriptionDetails = () => {
         {
           text: t('details.deleteConfirmYes', 'Delete'),
           style: 'destructive',
-          onPress: () => {
-            deleteSubscription(id);
-            posthog.capture("subscription_deleted", { id, name: sub.name });
-            router.replace("/");
+          onPress: async () => {
+            try {
+              await deleteSubscription(id);
+              posthog.capture("subscription_deleted", { id, name: sub.name });
+              router.replace("/");
+            } catch (error) {
+              console.error("Failed to delete subscription in SQLite:", error);
+              Alert.alert(
+                t("details.error", { defaultValue: "Error" }),
+                t("details.errorDeleteFailed", { defaultValue: "Failed to delete subscription. Please try again." })
+              );
+            }
           }
         }
       ]
     );
   };
 
-  const handleToggleStatus = (newStatus: 'active' | 'paused' | 'cancelled') => {
+  const handleToggleStatus = async (newStatus: 'active' | 'paused' | 'cancelled') => {
     const updatedSub: Subscription = {
       ...sub,
       status: newStatus
     };
 
-    updateSubscription(id, updatedSub);
-
-    setSub(updatedSub);
-    posthog.capture("subscription_status_changed", { id, status: newStatus });
+    try {
+      await updateSubscription(id, updatedSub);
+      setSub(updatedSub);
+      posthog.capture("subscription_status_changed", { id, status: newStatus });
+    } catch (error) {
+      console.error("Failed to update status in SQLite:", error);
+      Alert.alert(
+        t("details.error", { defaultValue: "Error" }),
+        t("details.errorUpdateStatus", { defaultValue: "Failed to update subscription status. Please try again." })
+      );
+    }
   };
 
   // Calculations for Trial countdown
@@ -297,7 +252,7 @@ const SubscriptionDetails = () => {
             <Text className="text-4xl font-sans-extrabold text-primary mb-2">
               {formatCurrency(sub.price, sub.currency || 'USD')}
               <Text className="text-base font-sans-semibold text-primary/70">
-                /{sub.billing}
+                /{sub.billing === "Monthly" ? t('common.monthly', { defaultValue: 'Monthly' }).toLocaleLowerCase(i18n.language) : t('common.yearly', { defaultValue: 'Yearly' }).toLocaleLowerCase(i18n.language)}
               </Text>
             </Text>
           )}
@@ -334,39 +289,47 @@ const SubscriptionDetails = () => {
           <View className="bg-card border border-border rounded-3xl p-5 gap-4 mb-6">
             {/* Status */}
             <View className="flex-row justify-between items-center py-2 border-b border-border/40">
-              <Text className="text-sm font-sans-semibold text-muted-foreground">Status</Text>
+              <Text className="text-sm font-sans-semibold text-muted-foreground">
+                {t('details.fields.status', { defaultValue: 'Status' })}
+              </Text>
               <Text className={clsx("text-base font-sans-bold", sub.status === 'active' ? "text-success" : sub.status === 'paused' ? "text-accent" : "text-muted-foreground")}>
                 {sub.status === 'active'
-                  ? t('details.activeStatus', 'Active')
+                  ? t('details.activeStatus', { defaultValue: 'Active' })
                   : sub.status === 'paused'
-                    ? t('details.pausedStatus', 'Paused')
-                    : t('details.cancelledStatus', 'Cancelled')}
+                    ? t('details.pausedStatus', { defaultValue: 'Paused' })
+                    : t('details.cancelledStatus', { defaultValue: 'Cancelled' })}
               </Text>
             </View>
 
             {/* Category */}
             <View className="flex-row justify-between items-center py-2 border-b border-border/40">
               <Text className="text-sm font-sans-semibold text-muted-foreground">{t('details.fields.category')}</Text>
-              <Text className="text-base font-sans-bold text-primary">{sub.category || 'Other'}</Text>
+              <Text className="text-base font-sans-bold text-primary">
+                {sub.category ? t(`categories.${sub.category}`, { defaultValue: sub.category }) : t('categories.Other', { defaultValue: 'Other' })}
+              </Text>
             </View>
 
             {/* Billing */}
             <View className="flex-row justify-between items-center py-2 border-b border-border/40">
               <Text className="text-sm font-sans-semibold text-muted-foreground">{t('details.fields.billing')}</Text>
-              <Text className="text-base font-sans-bold text-primary">{sub.billing}</Text>
+              <Text className="text-base font-sans-bold text-primary">
+                {sub.billing === "Monthly" ? t('common.monthly', { defaultValue: 'Monthly' }) : t('common.yearly', { defaultValue: 'Yearly' })}
+              </Text>
             </View>
 
             {/* Payment Method */}
             <View className="flex-row justify-between items-center py-2 border-b border-border/40">
               <Text className="text-sm font-sans-semibold text-muted-foreground">{t('details.fields.paymentMethod')}</Text>
               <Text className="text-base font-sans-bold text-primary" numberOfLines={1}>
-                {sub.paymentMethod || 'Not Provided'}
+                {sub.paymentMethod || t('card.notProvided', { defaultValue: 'Not Provided' })}
               </Text>
             </View>
 
             {/* Start Date */}
             <View className="flex-row justify-between items-center py-2 border-b border-border/40">
-              <Text className="text-sm font-sans-semibold text-muted-foreground">Started</Text>
+              <Text className="text-sm font-sans-semibold text-muted-foreground">
+                {t('details.fields.started', { defaultValue: 'Started' })}
+              </Text>
               <Text className="text-base font-sans-bold text-primary">
                 {formatSubscriptionDateTime(sub.startDate)}
               </Text>
@@ -410,7 +373,9 @@ const SubscriptionDetails = () => {
                     onPress={() => setBilling(cycle)}
                     className={clsx("px-5 py-2.5 rounded-xl border", billing === cycle ? "bg-primary border-primary" : "bg-background border-border")}
                   >
-                    <Text className={clsx("text-sm font-sans-bold", billing === cycle ? "text-white" : "text-primary")}>{cycle}</Text>
+                    <Text className={clsx("text-sm font-sans-bold", billing === cycle ? "text-white" : "text-primary")}>
+                      {cycle === "Monthly" ? t('common.monthly', { defaultValue: 'Monthly' }) : t('common.yearly', { defaultValue: 'Yearly' })}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -426,7 +391,9 @@ const SubscriptionDetails = () => {
                     onPress={() => setCategory(cat)}
                     className={clsx("px-4 py-2.5 rounded-full border", category === cat ? "bg-primary border-primary" : "bg-background border-border")}
                   >
-                    <Text className={clsx("text-sm font-sans-bold", category === cat ? "text-white" : "text-primary")}>{cat}</Text>
+                    <Text className={clsx("text-sm font-sans-bold", category === cat ? "text-white" : "text-primary")}>
+                      {t(`categories.${cat}`, { defaultValue: cat })}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>

@@ -4,6 +4,7 @@ import { clsx } from 'clsx';
 import dayjs from 'dayjs';
 import { useAnalytics } from '@/lib/analytics';
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -35,6 +36,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function CreateSubscriptionModal({ visible, onClose, onCreate }: CreateSubscriptionModalProps) {
+  const { t } = useTranslation();
   const { trackSubscriptionCreateStarted, trackSubscriptionCreateCancelled, trackSubscriptionCreated } = useAnalytics();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -118,7 +120,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
           className="modal-container"
         >
           <View className="modal-header">
-            <Text className="modal-title">New Subscription</Text>
+            <Text className="modal-title">{t('createModal.title', { defaultValue: 'New Subscription' })}</Text>
             <Pressable className="modal-close" onPress={handleCancel}>
               <Text className="modal-close-text">✕</Text>
             </Pressable>
@@ -130,10 +132,10 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
           >
             {/* Name input */}
             <View className="auth-field">
-              <Text className="auth-label">Name</Text>
+              <Text className="auth-label">{t('createModal.nameLabel', { defaultValue: 'Name' })}</Text>
               <TextInput
                 className="auth-input"
-                placeholder="Subscription Name"
+                placeholder={t('createModal.namePlaceholder', { defaultValue: 'Subscription Name' })}
                 placeholderTextColor="rgba(0, 0, 0, 0.4)"
                 value={name}
                 onChangeText={setName}
@@ -142,10 +144,10 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
 
             {/* Price input */}
             <View className="auth-field">
-              <Text className="auth-label">Price</Text>
+              <Text className="auth-label">{t('createModal.priceLabel', { defaultValue: 'Price' })}</Text>
               <TextInput
                 className="auth-input"
-                placeholder="0.00"
+                placeholder={t('createModal.pricePlaceholder', { defaultValue: '0.00' })}
                 placeholderTextColor="rgba(0, 0, 0, 0.4)"
                 keyboardType="decimal-pad"
                 value={price}
@@ -155,14 +157,14 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
 
             {/* Frequency options */}
             <View className="auth-field">
-              <Text className="auth-label">Frequency</Text>
+              <Text className="auth-label">{t('createModal.frequencyLabel', { defaultValue: 'Frequency' })}</Text>
               <View className="picker-row">
                 <Pressable
                   className={clsx("picker-option", frequency === "Monthly" && "picker-option-active")}
                   onPress={() => setFrequency("Monthly")}
                 >
                   <Text className={clsx("picker-option-text", frequency === "Monthly" && "picker-option-text-active")}>
-                    Monthly
+                    {t('createModal.frequencyMonthly', { defaultValue: 'Monthly' })}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -170,7 +172,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
                   onPress={() => setFrequency("Yearly")}
                 >
                   <Text className={clsx("picker-option-text", frequency === "Yearly" && "picker-option-text-active")}>
-                    Yearly
+                    {t('createModal.frequencyYearly', { defaultValue: 'Yearly' })}
                   </Text>
                 </Pressable>
               </View>
@@ -178,7 +180,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
 
             {/* Category selection */}
             <View className="auth-field">
-              <Text className="auth-label">Category</Text>
+              <Text className="auth-label">{t('createModal.categoryLabel', { defaultValue: 'Category' })}</Text>
               <View className="category-scroll">
                 {SUBSCRIPTION_CATEGORIES.map((cat) => {
                   const isActive = category === cat;
@@ -189,7 +191,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
                       onPress={() => setCategory(cat)}
                     >
                       <Text className={clsx("category-chip-text", isActive && "category-chip-text-active")}>
-                        {cat}
+                        {t(`categories.${cat}`, { defaultValue: cat })}
                       </Text>
                     </Pressable>
                   );
@@ -203,7 +205,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
               disabled={!isValid}
               onPress={handleSubmit}
             >
-              <Text className="auth-button-text">Add Subscription</Text>
+              <Text className="auth-button-text">{t('createModal.submit', { defaultValue: 'Add Subscription' })}</Text>
             </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
