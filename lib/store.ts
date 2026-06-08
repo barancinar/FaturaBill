@@ -16,15 +16,32 @@ const emit = () => {
   listeners.forEach(l => l());
 };
 
+export interface DBSubscriptionRow {
+  id: string;
+  name: string;
+  price: number;
+  billing: string;
+  category: string | null;
+  plan: string | null;
+  paymentMethod: string | null;
+  status: string | null;
+  startDate: string | null;
+  renewalDate: string | null;
+  color: string | null;
+  currency: string | null;
+  isTrial: number | null;
+  icon: any;
+}
+
 // Helper: Map React Native asset to a string key
-const getIconKey = (icon: any): string => {
+const getIconKey = (icon: DBSubscriptionRow['icon'] | string): string => {
   if (typeof icon === 'string') return icon;
   const found = Object.entries(icons).find(([_, value]) => value === icon);
   return found ? found[0] : 'plus';
 };
 
 // Helper: Map DB row to Subscription object
-const mapRowToSubscription = (row: any): Subscription => {
+const mapRowToSubscription = (row: DBSubscriptionRow): Subscription => {
   return {
     id: row.id,
     name: row.name,
@@ -67,7 +84,7 @@ export const initDatabase = async () => {
     `);
 
     // Check if table is empty
-    const rows = await db.getAllAsync<any>('SELECT * FROM subscriptions');
+    const rows = await db.getAllAsync<DBSubscriptionRow>('SELECT * FROM subscriptions');
     if (rows.length === 0) {
       // Seed with default subscriptions from constants/data
       for (const sub of HOME_SUBSCRIPTIONS) {
@@ -94,7 +111,7 @@ export const initDatabase = async () => {
           ]
         );
       }
-      const seededRows = await db.getAllAsync<any>('SELECT * FROM subscriptions');
+      const seededRows = await db.getAllAsync<DBSubscriptionRow>('SELECT * FROM subscriptions');
       subscriptions = seededRows.map(mapRowToSubscription);
     } else {
       subscriptions = rows.map(mapRowToSubscription);
@@ -114,14 +131,10 @@ initDatabase();
 export const getSubscriptions = () => subscriptions;
 
 export const updateSubscription = async (id: string, updatedSub: Subscription) => {
+  const previousSub = subscriptions.find(s => s.id === id);
+
   // Optimistic memory update
   subscriptions = subscriptions.map(s => s.id === id ? updatedSub : s);
-  
-  // Also update constants representation to ensure seamless fallback/external operations if any
-  const index = HOME_SUBSCRIPTIONS.findIndex(s => s.id === id);
-  if (index > -1) {
-    HOME_SUBSCRIPTIONS[index] = updatedSub;
-  }
   
   emit();
 
@@ -164,17 +177,20 @@ export const updateSubscription = async (id: string, updatedSub: Subscription) =
     );
   } catch (error) {
     console.error('Failed to update subscription in SQLite:', error);
+    if (previousSub) {
+      subscriptions = subscriptions.map(s => s.id === id ? previousSub : s);
+      emit();
+    }
+    throw error;
   }
 };
 
 export const deleteSubscription = async (id: string) => {
+  const previousSub = subscriptions.find(s => s.id === id);
+  const previousIndex = subscriptions.findIndex(s => s.id === id);
+
   // Optimistic memory update
   subscriptions = subscriptions.filter(s => s.id !== id);
-  
-  const index = HOME_SUBSCRIPTIONS.findIndex(s => s.id === id);
-  if (index > -1) {
-    HOME_SUBSCRIPTIONS.splice(index, 1);
-  }
   
   emit();
 
@@ -182,13 +198,19 @@ export const deleteSubscription = async (id: string) => {
     await db.runAsync('DELETE FROM subscriptions WHERE id = ?', [id]);
   } catch (error) {
     console.error('Failed to delete subscription from SQLite:', error);
+    if (previousSub && previousIndex > -1) {
+      const newSubs = [...subscriptions];
+      newSubs.splice(previousIndex, 0, previousSub);
+      subscriptions = newSubs;
+      emit();
+    }
+    throw error;
   }
 };
 
 export const addSubscription = async (newSub: Subscription) => {
   // Optimistic memory update
   subscriptions = [newSub, ...subscriptions];
-  HOME_SUBSCRIPTIONS.unshift(newSub);
   emit();
 
   try {
@@ -224,7 +246,7 @@ export const useSubscriptions = () => {
   const [state, setState] = useState(subscriptions);
 
   useEffect(() => {
-    if (!isLoaded && !isLoading) {
+    if (!isLoaded) {
       initDatabase();
     }
     
@@ -234,14 +256,10 @@ export const useSubscriptions = () => {
     
     listeners.add(handleUpdate);
     
-    if (state !== subscriptions) {
-      setState(subscriptions);
-    }
-    
     return () => {
       listeners.delete(handleUpdate);
     };
-  }, [state]);
+  }, []);
 
   return state;
 };
