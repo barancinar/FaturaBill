@@ -5,6 +5,8 @@ import { useAnalytics } from "@/lib/analytics";
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
+import { changeLanguage } from "@/lib/i18n";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -12,10 +14,18 @@ const Settings = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { trackSignOut, trackSignOutFailure, trackAppError } = useAnalytics();
+  const { t, i18n } = useTranslation();
+
+  const currentLang = i18n.language || "en";
+
+  const handleLanguageToggle = async () => {
+    const nextLang = currentLang === "en" ? "tr" : "en";
+    await changeLanguage(nextLang);
+  };
 
   const emailAddress = user?.emailAddresses?.[0]?.emailAddress;
   const fallbackName = emailAddress ? emailAddress.split("@")[0] : "";
-  const displayName = user?.fullName || fallbackName || "User";
+  const displayName = user?.fullName || fallbackName || t("settings.userFallback", { defaultValue: "User" });
 
   const handleSignOut = async () => {
     try {
@@ -32,7 +42,9 @@ const Settings = () => {
   return (
     <SafeAreaView className="flex-1 bg-background p-5 pt-8">
       {/* Header */}
-      <Text className="text-3xl font-sans-bold text-primary mb-6">Settings</Text>
+      <Text className="text-3xl font-sans-bold text-primary mb-6">
+        {t("settings.title", { defaultValue: "Settings" })}
+      </Text>
 
       {/* Profile Card */}
       {user && (
@@ -53,17 +65,38 @@ const Settings = () => {
       {/* Settings Options */}
       <View className="gap-3 mb-8">
         <Pressable className="flex-row items-center justify-between bg-card border border-border rounded-2xl px-5 py-4">
-          <Text className="text-base font-sans-semibold text-primary">Notifications</Text>
-          <Text className="text-sm font-sans-semibold text-accent">Enabled</Text>
+          <Text className="text-base font-sans-semibold text-primary">
+            {t("settings.notifications", { defaultValue: "Notifications" })}
+          </Text>
+          <Text className="text-sm font-sans-semibold text-accent">
+            {t("settings.notificationsValue", { defaultValue: "Enabled" })}
+          </Text>
         </Pressable>
 
         <Pressable className="flex-row items-center justify-between bg-card border border-border rounded-2xl px-5 py-4">
-          <Text className="text-base font-sans-semibold text-primary">Currency</Text>
+          <Text className="text-base font-sans-semibold text-primary">
+            {t("settings.currency", { defaultValue: "Currency" })}
+          </Text>
           <Text className="text-sm font-sans-semibold text-accent">USD ($)</Text>
         </Pressable>
 
+        {/* Language Row */}
+        <Pressable 
+          onPress={handleLanguageToggle}
+          className="flex-row items-center justify-between bg-card border border-border rounded-2xl px-5 py-4"
+        >
+          <Text className="text-base font-sans-semibold text-primary">
+            {t("settings.language", { defaultValue: "Language" })}
+          </Text>
+          <Text className="text-sm font-sans-semibold text-accent">
+            {currentLang === "tr" ? t("settings.turkish", { defaultValue: "Türkçe" }) : t("settings.english", { defaultValue: "English" })}
+          </Text>
+        </Pressable>
+
         <Pressable className="flex-row items-center justify-between bg-card border border-border rounded-2xl px-5 py-4">
-          <Text className="text-base font-sans-semibold text-primary">Help & Support</Text>
+          <Text className="text-base font-sans-semibold text-primary">
+            {t("settings.helpSupport", { defaultValue: "Help & Support" })}
+          </Text>
         </Pressable>
       </View>
 
@@ -72,7 +105,9 @@ const Settings = () => {
         onPress={handleSignOut}
         className="mt-auto mb-30 items-center rounded-2xl bg-destructive py-4 border border-destructive/20"
       >
-        <Text className="text-base font-sans-bold text-white">Sign Out</Text>
+        <Text className="text-base font-sans-bold text-white">
+          {t("settings.signOut", { defaultValue: "Sign Out" })}
+        </Text>
       </Pressable>
     </SafeAreaView>
   );

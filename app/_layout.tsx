@@ -1,8 +1,8 @@
 import "@/global.css";
-import "@/lib/i18n";
+import { initLanguage } from "@/lib/i18n";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack, useRouter, useSegments, useRootNavigationState } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/expo";
 import { tokenCache } from "@/clerk/tokenCache";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
@@ -78,6 +78,7 @@ function InitialLayout() {
 }
 
 export default function RootLayout() {
+  const [i18nInitialized, setI18nInitialized] = useState(false);
   const [fontsLoaded] = useFonts({
     'sans-regular': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
     'sans-medium': require('../assets/fonts/PlusJakartaSans-Medium.ttf'),
@@ -88,12 +89,18 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
+    initLanguage().finally(() => {
+      setI18nInitialized(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (fontsLoaded && i18nInitialized) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, i18nInitialized]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !i18nInitialized) {
     return null;
   }
 

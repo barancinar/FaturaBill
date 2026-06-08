@@ -1,103 +1,24 @@
-import { styled } from "nativewind";
-import React, { useState, useMemo, useEffect } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import dayjs from 'dayjs';
-import { useTranslation, initReactI18next } from 'react-i18next';
-import i18n from 'i18next';
+import { styled } from "nativewind";
+import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
+import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 
 import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions';
-import { formatCurrency } from '@/lib/utils';
 import { colors } from '@/constants/theme';
-import { useSubscriptions } from "@/lib/store";
-import clsx from 'clsx';
 import "@/global.css";
+import { useSubscriptions } from "@/lib/store";
+import { formatCurrency } from '@/lib/utils';
+import clsx from 'clsx';
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 
 
-// English translation dictionary
-const enResources = {
-  insights: {
-    title: "Insights",
-    monthly: "Monthly",
-    yearly: "Yearly",
-    projectedSpend: "Projected {{period}} Spend",
-    basedOnActive_one: "Based on {{count}} active subscription",
-    basedOnActive_other: "Based on {{count}} active subscriptions",
-    pausedCount_one: "{{count}} Paused",
-    pausedCount_other: "{{count}} Paused",
-    averageBill: "Average Bill",
-    perSubscription: "per subscription",
-    mostExpensive: "Most Expensive",
-    noSubscription: "None",
-    categoryDistribution: "Category Distribution",
-    categoryBreakdown: "Category Breakdown",
-    smartInsights: "Smart Insights",
-    upcomingRenewals: "Upcoming Renewals",
-    renewingToday: "Renewing today",
-    renewingTomorrow: "Renewing tomorrow",
-    renewingInDays_one: "Renewing in {{count}} day",
-    renewingInDays_other: "Renewing in {{count}} days",
-    currencyLabel: "Currency:",
-    consolidationAlert: "Consolidation Alert",
-    trialEnding: "Trial Ending",
-    rec: {
-      categoryDominance: "{{category}} is your highest spending category, representing {{percentage}}% of your total budget at {{amount}}/{{period}}.",
-      potentialSavingsTitle: "Potential Savings",
-      potentialSavings: "You have {{count}} paused subscription(s). Deleting or cancelling them completely could save you up to {{amount}}/{{period}}.",
-      highCostTitle: "High-Cost Alert",
-      highCost: "{{name}} is your most expensive subscription, costing {{amount}}/{{period}}. Make sure you still get value from this subscription.",
-      overlappingTools: "You have {{count}} active subscriptions in \"{{category}}\". Consider consolidating them to save money.",
-      trialExpiration: "Urgent: Your trial for {{name}} expires in {{days}} day(s). Cancel now to avoid being charged.",
-      defaultTipTitle: "Subscription Tip",
-      defaultTip: "Keep tracking your subscriptions to get smart recommendations and cost-saving opportunities."
-    }
-  }
-};
-
-// Turkish translation dictionary
-const trResources = {
-  insights: {
-    title: "Analizler",
-    monthly: "Aylık",
-    yearly: "Yıllık",
-    projectedSpend: "Tahmini {{period}} Harcama",
-    basedOnActive_one: "{{count}} aktif aboneliğe göre",
-    basedOnActive_other: "{{count}} aktif aboneliğe göre",
-    pausedCount_one: "{{count}} Duraklatıldı",
-    pausedCount_other: "{{count}} Duraklatıldı",
-    averageBill: "Ortalama Fatura",
-    perSubscription: "abonelik başına",
-    mostExpensive: "En Yüksek Tutar",
-    noSubscription: "Yok",
-    categoryDistribution: "Kategori Dağılımı",
-    categoryBreakdown: "Kategori Kırılımı",
-    smartInsights: "Akıllı Öneriler",
-    upcomingRenewals: "Yaklaşan Ödemeler",
-    renewingToday: "Bugün yenileniyor",
-    renewingTomorrow: "Yarın yenileniyor",
-    renewingInDays_one: "{{count}} gün içinde yenileniyor",
-    renewingInDays_other: "{{count}} gün içinde yenileniyor",
-    currencyLabel: "Para Birimi:",
-    consolidationAlert: "Konsolidasyon Uyarısı",
-    trialEnding: "Deneme Bitiş Uyarısı",
-    rec: {
-      categoryDominance: "{{category}} en çok harcama yaptığınız kategori olup, toplam bütçenizin %{{percentage}} kadarını oluşturuyor ({{amount}}/{{period}}).",
-      potentialSavingsTitle: "Potansiyel Tasarruf",
-      potentialSavings: "Duraklatılmış {{count}} adet aboneliğiniz var. Bunları tamamen iptal ederek {{amount}}/{{period}} tasarruf edebilirsiniz.",
-      highCostTitle: "Yüksek Tutar Uyarısı",
-      highCost: "En pahalı aboneliğiniz {{name}} ({{amount}}/{{period}}). Hâlâ değer sağladığından emin olun.",
-      overlappingTools: "\"{{category}}\" kategorisinde {{count}} adet aktif aboneliğiniz var. Tasarruf etmek için bunları birleştirmeyi düşünün.",
-      trialExpiration: "Acil: {{name}} deneme süreniz {{days}} gün içinde sona eriyor. Ücret ödememek için şimdi iptal edin.",
-      defaultTipTitle: "Abonelik Tavsiyesi",
-      defaultTip: "Akıllı öneriler ve tasarruf fırsatları almak için aboneliklerinizi takip etmeye devam edin."
-    }
-  }
-};
+// Centralized translations are loaded from lib/i18n locale files
 
 // Category colors mapping for visual bars and charts
 const CATEGORY_COLORS: Record<string, string> = {
@@ -154,16 +75,7 @@ const Insights = () => {
   const [period, setPeriod] = useState<'Monthly' | 'Yearly'>('Monthly');
   const [preferredCurrency, setPreferredCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
 
-  // Load translations dynamically
-  useEffect(() => {
-    i18n.addResourceBundle('en', 'translation', enResources, true, true);
-    i18n.addResourceBundle('tr', 'translation', trResources, true, true);
-  }, []);
-
-  const toggleLanguage = () => {
-    const nextLang = i18n.language === 'tr' ? 'en' : 'tr';
-    i18n.changeLanguage(nextLang);
-  };
+  // Calculations are processed reactively on store state changes
 
   // Calculate analytics
   const stats = useMemo(() => {
@@ -284,7 +196,7 @@ const Insights = () => {
           title: t('insights.consolidationAlert', 'Consolidation Alert'),
           desc: t('insights.rec.overlappingTools', {
             defaultValue: 'You have {{count}} active subscriptions in "{{category}}". Consider consolidating them to save money.',
-            category: catName,
+            category: t(`categories.${catName}`, { defaultValue: catName }),
             count: subs.length
           }),
           icon: 'layers',
@@ -295,8 +207,8 @@ const Insights = () => {
 
     // Rule 3: Highest spend category dominance
     const periodLabel = period === 'Monthly' 
-      ? (i18n.language === 'tr' ? 'ay' : 'mo') 
-      : (i18n.language === 'tr' ? 'yıl' : 'yr');
+      ? t('insights.rec.periodLabelMonthly', { defaultValue: 'mo' })
+      : t('insights.rec.periodLabelYearly', { defaultValue: 'yr' });
 
     if (categoryBreakdown.length > 0 && categoryBreakdown[0].percentage > 35) {
       recommendations.push({
@@ -304,7 +216,7 @@ const Insights = () => {
         title: t('insights.categoryDistribution', 'Category Dominance'),
         desc: t('insights.rec.categoryDominance', {
           defaultValue: '{{category}} is your highest spending category, representing {{percentage}}% of your total budget at {{amount}}/{{period}}.',
-          category: categoryBreakdown[0].name,
+          category: t(`categories.${categoryBreakdown[0].name}`, { defaultValue: categoryBreakdown[0].name }),
           percentage: categoryBreakdown[0].percentage.toFixed(1),
           amount: formatCurrency(categoryBreakdown[0].total, preferredCurrency),
           period: periodLabel
@@ -421,17 +333,6 @@ const Insights = () => {
         <Text className="text-3xl font-sans-bold text-primary">{t('insights.title', 'Insights')}</Text>
         
         <View className="flex-row items-center gap-2">
-          {/* Language Selector */}
-          <TouchableOpacity 
-            onPress={toggleLanguage}
-            className="bg-card border border-border px-3 py-1.5 rounded-full flex-row items-center gap-1"
-          >
-            <Feather name="globe" size={12} color="#081126" />
-            <Text className="text-xs font-sans-bold text-primary">
-              {(i18n.language || 'en').toUpperCase()}
-            </Text>
-          </TouchableOpacity>
-
           {/* Period Selector (Monthly/Yearly) */}
           <View className="flex-row bg-muted rounded-full p-1 border border-border">
             <TouchableOpacity 
@@ -547,8 +448,8 @@ const Insights = () => {
               <View className="items-center justify-center">
                 <PieChart
                   donut
-                  radius={70}
-                  innerRadius={48}
+                  radius={72}
+                  innerRadius={36}
                   data={chartData}
                   showText
                   textColor="#081126"
@@ -567,7 +468,7 @@ const Insights = () => {
                     <View className="size-3 rounded-full" style={{ backgroundColor: item.color }} />
                     <View className="flex-1 min-w-0">
                       <Text className="text-sm font-sans-semibold text-primary" numberOfLines={1}>
-                        {item.name}
+                        {t(`categories.${item.name}`, { defaultValue: item.name })}
                       </Text>
                       <Text className="text-xs font-sans-medium text-muted-foreground">
                         {item.percentage.toFixed(1)}% ({formatCurrency(item.total, preferredCurrency)})
@@ -596,9 +497,11 @@ const Insights = () => {
                   <View className="flex-row justify-between items-center">
                     <View className="flex-row items-center gap-2">
                       <View className="size-3 rounded-full" style={{ backgroundColor: item.color }} />
-                      <Text className="text-base font-sans-semibold text-primary">{item.name}</Text>
+                      <Text className="text-base font-sans-semibold text-primary">
+                        {t(`categories.${item.name}`, { defaultValue: item.name })}
+                      </Text>
                       <Text className="text-sm font-sans-medium text-muted-foreground">
-                        ({item.count} {item.count > 1 ? 'subs' : 'sub'})
+                        ({item.count} {item.count > 1 ? t('common.sub_other', { defaultValue: 'subs' }) : t('common.sub_one', { defaultValue: 'sub' })})
                       </Text>
                     </View>
                     <View className="items-end">

@@ -15,11 +15,13 @@ import { useAnalytics } from "@/lib/analytics";
 import { useState, useEffect } from "react";
 import { FlatList, Image, Pressable, Text, View } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 
 const SafeAreaView = styled(RNSafeAreaView);
 
 export default function App() {
+    const { t } = useTranslation();
     const { user } = useUser();
     const { trackSubscriptionCardExpanded, updateUserProperties } = useAnalytics();
     const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export default function App() {
                                 </Pressable>
                             </View>
                             <View className="home-balance-card">
-                                <Text className="home-balance-label">Balance</Text>
+                                <Text className="home-balance-label">{t("home.balance", { defaultValue: "Balance" })}</Text>
                                 <View className="home-balance-row">
                                     <Text className="home-balance-amount">
                                         {formatCurrency(HOME_BALANCE.amount)}
@@ -81,19 +83,19 @@ export default function App() {
                                     </Text>
                                 </View>
                             </View>
-
+ 
                              <View className="mb-5">
-                                 <ListHeading title="Upcoming"/>
+                                 <ListHeading title={t("home.upcoming", { defaultValue: "Upcoming" })}/>
                                  <FlatList
                                      data={UPCOMING_SUBSCRIPTIONS}
                                      renderItem={({ item }) => <UpcomingSubscriptionCard {...item} />}
                                      keyExtractor={(item) => item.id }
                                      horizontal
                                      showsHorizontalScrollIndicator={false}
-                                     ListEmptyComponent={<Text className="home-empty-state">No upcoming renewals yet.</Text>}
+                                     ListEmptyComponent={<Text className="home-empty-state">{t("home.noUpcoming", { defaultValue: "No upcoming renewals yet." })}</Text>}
                                  />
                              </View>
-                            <ListHeading title="All Subscriptions"/>
+                            <ListHeading title={t("home.allSubscriptions", { defaultValue: "All Subscriptions" })}/>
             
                         </>
                     )}
@@ -116,7 +118,7 @@ export default function App() {
                     ItemSeparatorComponent={() => <View className="h-4" />}
                     showsVerticalScrollIndicator={false}
                     contentContainerClassName="pb-30"
-                    ListEmptyComponent={<Text className="home-empty-state">No subscriptions found. Add your first subscription to get started!</Text>}
+                    ListEmptyComponent={<Text className="home-empty-state">{t("home.noSubscriptions", { defaultValue: "No subscriptions found. Add your first subscription to get started!" })}</Text>}
                 />
 
                 <CreateSubscriptionModal
