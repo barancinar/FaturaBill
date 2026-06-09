@@ -32,24 +32,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Other": "#6b7280"              // gray
 };
 
-// Mock exchange rates
-const EXCHANGE_RATES: Record<string, number> = {
-  "TRY": 1.0,
-  "USD": 32.5,
-  "EUR": 35.0
-};
-
-// Converted currency helper
-const convertCurrency = (amount: number, from: string = 'USD', to: string = 'TRY'): number => {
-  const fromUpper = from.toUpperCase();
-  const toUpper = to.toUpperCase();
-  
-  const rateFrom = EXCHANGE_RATES[fromUpper] || EXCHANGE_RATES['USD'];
-  const rateTo = EXCHANGE_RATES[toUpper] || EXCHANGE_RATES['TRY'];
-  
-  const amountInTry = amount * rateFrom;
-  return amountInTry / rateTo;
-};
+import { usePreferredCurrency, setPreferredCurrency } from '@/lib/settingsStore';
+import { convertCurrency, getDisplayRates } from '@/lib/currency';
 
 // Helper to normalize and convert subscription price based on billing period and preferred currency
 const normalizeSubscriptionPrice = (
@@ -73,7 +57,7 @@ const Insights = () => {
   const { t } = useTranslation();
   const subscriptions = useSubscriptions();
   const [period, setPeriod] = useState<'Monthly' | 'Yearly'>('Monthly');
-  const [preferredCurrency, setPreferredCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const preferredCurrency = usePreferredCurrency();
 
   // Calculations are processed reactively on store state changes
 
@@ -373,6 +357,9 @@ const Insights = () => {
           </TouchableOpacity>
         ))}
       </View>
+      <Text className="text-xs font-sans-medium text-muted-foreground/60 mb-5 -mt-3.5 pl-1">
+        {getDisplayRates(preferredCurrency)}
+      </Text>
 
       <ScrollView 
         showsVerticalScrollIndicator={false}
@@ -537,7 +524,7 @@ const Insights = () => {
           </Text>
           <View className="gap-4">
             {stats.recommendations.map((rec) => (
-              <View key={rec.id} className="flex-row gap-3 bg-background border border-border/40 rounded-2xl p-5">
+              <View key={rec.id} className="flex-row gap-3 bg-background border border-border rounded-2xl p-5">
                 <View
                   className="size-12 rounded-full items-center justify-center shrink-0"
                   style={{ backgroundColor: rec.color + '15' }}
@@ -569,7 +556,7 @@ const Insights = () => {
               {stats.timeline.map((item) => (
                 <View key={item.id} className="flex-row items-center gap-3">
                   {/* Icon Wrapper */}
-                  <View className="size-14 rounded-xl bg-background border border-border/40 items-center justify-center p-2">
+                  <View className="size-14 rounded-xl bg-background border border-border items-center justify-center p-2">
                     <Image source={item.icon} className="w-full h-full rounded-lg" resizeMode="contain" />
                   </View>
                   

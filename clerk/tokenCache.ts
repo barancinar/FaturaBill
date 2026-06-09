@@ -23,10 +23,19 @@ export const tokenCache: TokenCache = {
   },
   async saveToken(key: string, value: string) {
     try {
-      await SecureStore.setItemAsync(key, value);
+      await SecureStore.setItemAsync(key, value, {
+        keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
+      });
     } catch (err) {
       console.error('SecureStore save item error: ', err);
       return;
     }
   },
+  async clearToken(key: string) {
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch (err) {
+      console.error('SecureStore delete item error: ', err);
+    }
+  }
 };

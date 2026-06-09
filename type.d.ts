@@ -47,5 +47,6 @@ interface UpcomingSubscriptionCardProps
 
 interface ListHeadingProps {
     title: string;
+    onPress?: () => void;
 }
 
