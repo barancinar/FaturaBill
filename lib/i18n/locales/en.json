@@ -22,7 +22,8 @@
     "cancel": "Cancel",
     "enabled": "Enabled",
     "sub_one": "sub",
-    "sub_other": "subs"
+    "sub_other": "subs",
+    "viewAll": "View All"
   },
   "card": {
     "viewDetails": "View Details",
@@ -39,7 +40,17 @@
     "upcoming": "Upcoming",
     "allSubscriptions": "All Subscriptions",
     "noUpcoming": "No upcoming renewals yet.",
-    "noSubscriptions": "No subscriptions found. Add your first subscription to get started!"
+    "noSubscriptions": "No subscriptions found. Add your first subscription to get started!",
+    "budgetProgress": "Budget Progress",
+    "budgetLimit": "Monthly Budget Limit",
+    "budgetSpendPercentage": "{{percent}}% of budget used",
+    "budgetOverspent": "Overspent by {{amount}}!",
+    "budgetLimitText": "{{spend}} of {{limit}}",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "lastDay": "Last Day",
+    "noBudgetSet": "No budget set yet",
+    "tapToSetBudget": "Tap here to set your monthly limit"
   },
   "subscriptions": {
     "title": "Subscriptions",
@@ -138,6 +149,7 @@
     "frequencyMonthly": "Monthly",
     "frequencyYearly": "Yearly",
     "categoryLabel": "Category",
+    "currencyLabel": "Currency",
     "submit": "Add Subscription"
   },
   "settings": {
@@ -145,10 +157,27 @@
     "notifications": "Notifications",
     "notificationsValue": "Enabled",
     "currency": "Currency",
+    "selectPreferredCurrencyTitle": "Select Preferred Currency",
+    "selectCurrencyDesc": "Choose the global currency to convert and consolidate your monthly spend and reports.",
     "helpSupport": "Help & Support",
     "signOut": "Sign Out",
     "language": "Language",
     "english": "English",
-    "turkish": "Turkish"
+    "turkish": "Turkish",
+    "monthlyBudget": "Monthly Budget",
+    "editBudgetTitle": "Edit Monthly Budget",
+    "budgetInputPlaceholder": "Enter your monthly budget",
+    "save": "Save",
+    "notSet": "Not Set"
+  },
+  "upcomingModal": {
+    "title": "Upcoming Payments",
+    "dueSevenDays": "Due in 7 Days",
+    "dueThirtyDays": "Due in 30 Days",
+    "thisWeek": "This Week",
+    "nextWeek": "Next Week",
+    "restOfMonth": "Rest of the Month",
+    "noPayments": "No payments due in this period",
+    "markAsPaid": "Mark as Paid"
   }
 }

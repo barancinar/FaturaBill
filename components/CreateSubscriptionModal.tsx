@@ -3,6 +3,7 @@ import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions';
 import { clsx } from 'clsx';
 import dayjs from 'dayjs';
 import { useAnalytics } from '@/lib/analytics';
+import { usePreferredCurrency } from '@/lib/settingsStore';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -38,21 +39,25 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function CreateSubscriptionModal({ visible, onClose, onCreate }: CreateSubscriptionModalProps) {
   const { t } = useTranslation();
   const { trackSubscriptionCreateStarted, trackSubscriptionCreateCancelled, trackSubscriptionCreated } = useAnalytics();
+  const preferredCurrency = usePreferredCurrency();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
+  const [currency, setCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
   const [frequency, setFrequency] = useState<'Monthly' | 'Yearly'>('Monthly');
   const [category, setCategory] = useState('Entertainment');
 
   useEffect(() => {
     if (visible) {
       trackSubscriptionCreateStarted();
+      setCurrency(preferredCurrency);
     }
-  }, [visible, trackSubscriptionCreateStarted]);
+  }, [visible, trackSubscriptionCreateStarted, preferredCurrency]);
 
   const handleClose = () => {
     // Reset form states
     setName('');
     setPrice('');
+    setCurrency(preferredCurrency);
     setFrequency('Monthly');
     setCategory('Entertainment');
     onClose();
@@ -85,7 +90,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
       startDate,
       renewalDate,
       color: CATEGORY_COLORS[category] || '#e2e8f0',
-      currency: 'USD',
+      currency,
     };
 
     onCreate(newSub);
@@ -95,6 +100,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
       subscription_price: parsedPrice,
       subscription_frequency: frequency,
       subscription_category: category,
+      subscription_currency: currency,
     });
 
     handleClose();
@@ -153,6 +159,24 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
                 value={price}
                 onChangeText={setPrice}
               />
+            </View>
+
+            {/* Currency options */}
+            <View className="auth-field">
+              <Text className="auth-label">{t('createModal.currencyLabel', { defaultValue: 'Currency' })}</Text>
+              <View className="picker-row">
+                {(['TRY', 'USD', 'EUR'] as const).map((curr) => (
+                  <Pressable
+                    key={curr}
+                    className={clsx("picker-option", currency === curr && "picker-option-active")}
+                    onPress={() => setCurrency(curr)}
+                  >
+                    <Text className={clsx("picker-option-text", currency === curr && "picker-option-text-active")}>
+                      {curr}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
 
             {/* Frequency options */}

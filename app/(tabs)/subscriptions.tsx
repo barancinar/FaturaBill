@@ -16,6 +16,8 @@ import { Feather } from "@expo/vector-icons";
 
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { formatCurrency } from "@/lib/utils";
+import { usePreferredCurrency } from "@/lib/settingsStore";
+import { convertCurrency } from "@/lib/currency";
 import { useSubscriptions } from "@/lib/store";
 import { SUBSCRIPTION_CATEGORIES } from "@/constants/subscriptions";
 import "@/global.css";
@@ -31,6 +33,7 @@ const Subscriptions = () => {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
   const subscriptions = useSubscriptions();
+  const preferredCurrency = usePreferredCurrency();
 
 
   // Calculate statistics based on current active/paused status
@@ -50,7 +53,8 @@ const Subscriptions = () => {
       if (sub.status !== "cancelled") {
         const isYearly = sub.billing.toLowerCase() === "yearly";
         const monthlyEquivalent = isYearly ? sub.price / 12 : sub.price;
-        monthlySpend += monthlyEquivalent;
+        const converted = convertCurrency(monthlyEquivalent, sub.currency || 'USD', preferredCurrency);
+        monthlySpend += converted;
       }
     });
 
@@ -59,7 +63,7 @@ const Subscriptions = () => {
       activeCount: active,
       pausedCount: paused,
     };
-  }, [subscriptions]);
+  }, [subscriptions, preferredCurrency]);
 
   // Filter subscriptions based on search query and selected chip
   const filteredSubscriptions = useMemo(() => {
@@ -98,7 +102,7 @@ const Subscriptions = () => {
           <Text className="text-xs font-sans-semibold text-white/60 uppercase tracking-wider">
             {t("subscriptions.monthlySpend", { defaultValue: "Monthly Spend" })}
           </Text>
-          <Text className="text-2xl font-sans-extrabold text-white">{formatCurrency(totalMonthly)}</Text>
+          <Text className="text-2xl font-sans-extrabold text-white">{formatCurrency(totalMonthly, preferredCurrency)}</Text>
         </View>
         <View className="flex-row gap-2 flex-1">
           <View className="flex-1 bg-card border border-border rounded-2xl p-3 justify-between items-center">

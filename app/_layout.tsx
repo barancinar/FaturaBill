@@ -5,9 +5,15 @@ import { SplashScreen, Stack, useRouter, useSegments, useRootNavigationState } f
 import { useEffect, useState } from "react";
 import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/expo";
 import { tokenCache } from "@/clerk/tokenCache";
+import { setAuthSession } from "@/lib/store";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
+import { initSettingsStore, fetchLatestRates } from "@/lib/settingsStore";
 
-SplashScreen.preventAutoHideAsync();
+
+
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* Prevent uncaught promise rejections on hot reload */
+});
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -28,7 +34,7 @@ if (!posthogHost) {
 }
 
 function InitialLayout() {
-  const { isLoaded, isSignedIn, userId } = useAuth();
+  const { isLoaded, isSignedIn, userId, getToken } = useAuth();
   const posthog = usePostHog();
   const segments = useSegments();
   const router = useRouter();
@@ -44,6 +50,17 @@ function InitialLayout() {
       posthog.reset();
     }
   }, [isLoaded, isSignedIn, userId, posthog]);
+
+  // Sync Clerk Auth State to the local SQLite and Supabase Sync Engine
+  useEffect(() => {
+    if (isLoaded) {
+      if (isSignedIn && userId) {
+        setAuthSession(userId, () => getToken({ template: 'supabase' }));
+      } else {
+        setAuthSession(null, null);
+      }
+    }
+  }, [isLoaded, isSignedIn, userId]);
 
   // Automatic Screen View Tracking
   useEffect(() => {
@@ -89,14 +106,21 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    initLanguage().finally(() => {
+    Promise.all([
+      initLanguage(),
+      initSettingsStore()
+    ]).then(() => {
+      fetchLatestRates(); // non-blocking background rate update
+    }).finally(() => {
       setI18nInitialized(true);
     });
   }, []);
 
   useEffect(() => {
     if (fontsLoaded && i18nInitialized) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {
+        /* Prevent uncaught promise rejections if already hidden or view controller not ready */
+      });
     }
   }, [fontsLoaded, i18nInitialized]);
 
