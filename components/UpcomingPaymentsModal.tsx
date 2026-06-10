@@ -27,7 +27,7 @@ export default function UpcomingPaymentsModal({ visible, onClose }: UpcomingPaym
         const daysLeft = renewalDate.diff(today, 'day');
         return {
           ...sub,
-          daysLeft: daysLeft < 0 ? 0 : daysLeft,
+          daysLeft: daysLeft,
         };
       })
       .filter((sub) => sub.daysLeft >= 0 && sub.daysLeft <= 30)

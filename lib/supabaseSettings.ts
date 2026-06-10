@@ -18,7 +18,8 @@ export const fetchMonthlyBudget = async (
     }
 
     if (data && data.monthly_budget !== null && data.monthly_budget !== undefined) {
-      return parseFloat(data.monthly_budget);
+      const parsed = parseFloat(data.monthly_budget);
+      return Number.isFinite(parsed) ? parsed : null;
     }
   } catch (err) {
     console.error('[SupabaseSettings] Unexpected error fetching budget:', err);

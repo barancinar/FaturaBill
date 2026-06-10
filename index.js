@@ -1,29 +1,13 @@
-/* eslint-disable */
-// Monkey-patch Expo Router's internal SplashScreen module to prevent uncaught native rejections on Expo Go / Android reloads.
+/* eslint-disable no-undef */
+const { SplashScreen } = require("expo-router");
+
 try {
-  const SplashScreenInternal = require("expo-router/build/utils/splash");
-  if (SplashScreenInternal) {
-    if (SplashScreenInternal._internal_preventAutoHideAsync) {
-      const orig = SplashScreenInternal._internal_preventAutoHideAsync;
-      SplashScreenInternal._internal_preventAutoHideAsync = function () {
-        return orig.apply(this, arguments).catch(() => false);
-      };
-    }
-    if (SplashScreenInternal.preventAutoHideAsync) {
-      const orig = SplashScreenInternal.preventAutoHideAsync;
-      SplashScreenInternal.preventAutoHideAsync = function () {
-        return orig.apply(this, arguments).catch(() => false);
-      };
-    }
-    if (SplashScreenInternal.hideAsync) {
-      const orig = SplashScreenInternal.hideAsync;
-      SplashScreenInternal.hideAsync = function () {
-        return orig.apply(this, arguments).catch(() => {});
-      };
-    }
-  }
+  SplashScreen.preventAutoHideAsync().catch(() => {
+    /* Prevent uncaught native rejections on hot reload */
+  });
 } catch (e) {
-  console.warn("Failed to patch Expo Router SplashScreen", e);
+  // eslint-disable-next-line no-console
+  console.warn("Failed to prevent splash screen auto hide", e);
 }
 
 // Load the actual Expo Router entry point
