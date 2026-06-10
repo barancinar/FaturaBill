@@ -180,6 +180,7 @@
     "saveSuccess": "Profile updated successfully!",
     "saveError": "Failed to update profile. Please try again.",
     "pickImageError": "Failed to select image.",
+    "permissionError": "We need access to your photo library to update your profile photo. Please enable it in your device settings.",
     "saving": "Saving...",
     "editPhoto": "Edit Photo",
     "fields": {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Image,
   Pressable,
@@ -24,7 +24,7 @@ import { clsx } from "clsx";
 const SafeAreaView = styled(RNSafeAreaView);
 
 const Profile = () => {
-  const { user } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -32,13 +32,34 @@ const Profile = () => {
   const [lastName, setLastName] = useState(user?.lastName || "");
   const [phone, setPhone] = useState((user?.unsafeMetadata?.phone as string) || "");
   const [bio, setBio] = useState((user?.unsafeMetadata?.bio as string) || "");
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
 
+  // Sync state when Clerk user loads
+  useEffect(() => {
+    if (user && !isInitialized) {
+      setFirstName(user.firstName || "");
+      setLastName(user.lastName || "");
+      setPhone((user.unsafeMetadata?.phone as string) || "");
+      setBio((user.unsafeMetadata?.bio as string) || "");
+      setIsInitialized(true);
+    }
+  }, [user, isInitialized]);
+
   const emailAddress = user?.emailAddresses?.[0]?.emailAddress || "";
+  const isInteractionDisabled = !isLoaded || !isSignedIn || !user;
 
   const onPickImage = async () => {
+    if (isInteractionDisabled || !user) {
+      Alert.alert(
+        t("details.error", { defaultValue: "Error" }),
+        t("profile.saveError", { defaultValue: "Failed to update profile. Please try again." })
+      );
+      return;
+    }
+
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
@@ -63,7 +84,7 @@ const Profile = () => {
         const mimeType = result.assets[0].mimeType || 'image/jpeg';
         const imageUri = `data:${mimeType};base64,${base64}`;
 
-        await user?.setProfileImage({
+        await user.setProfileImage({
           file: imageUri,
         });
 
@@ -84,6 +105,14 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
+    if (isInteractionDisabled || !user) {
+      Alert.alert(
+        t("details.error", { defaultValue: "Error" }),
+        t("profile.saveError", { defaultValue: "Failed to update profile. Please try again." })
+      );
+      return;
+    }
+
     if (!firstName.trim() || !lastName.trim()) {
       Alert.alert(
         t("details.error", { defaultValue: "Error" }),
@@ -94,7 +123,7 @@ const Profile = () => {
 
     try {
       setSaving(true);
-      await user?.update({
+      await user.update({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         unsafeMetadata: {
@@ -149,7 +178,7 @@ const Profile = () => {
           <View className="items-center mt-2">
             <Pressable 
               onPress={onPickImage}
-              disabled={imageUploading}
+              disabled={imageUploading || isInteractionDisabled}
               className="relative active:opacity-90"
             >
               <View className="w-28 h-28 rounded-full border-2 border-accent overflow-hidden items-center justify-center bg-card">
@@ -168,7 +197,7 @@ const Profile = () => {
               </View>
             </Pressable>
             
-            <Pressable onPress={onPickImage} disabled={imageUploading} className="mt-3 active:opacity-70">
+            <Pressable onPress={onPickImage} disabled={imageUploading || isInteractionDisabled} className="mt-3 active:opacity-70">
               <Text className="text-sm font-sans-semibold text-accent">
                 {t("profile.editPhoto", { defaultValue: "Edit Photo" })}
               </Text>
@@ -187,6 +216,7 @@ const Profile = () => {
                 value={firstName}
                 onChangeText={setFirstName}
                 autoCapitalize="words"
+                editable={!saving && !isInteractionDisabled}
               />
             </View>
 
@@ -200,6 +230,7 @@ const Profile = () => {
                 value={lastName}
                 onChangeText={setLastName}
                 autoCapitalize="words"
+                editable={!saving && !isInteractionDisabled}
               />
             </View>
 
@@ -224,6 +255,7 @@ const Profile = () => {
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
+                editable={!saving && !isInteractionDisabled}
               />
             </View>
 
@@ -239,14 +271,15 @@ const Profile = () => {
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
+                editable={!saving && !isInteractionDisabled}
               />
             </View>
           </View>
 
           {/* Submit Button */}
           <Pressable
-            className={clsx("auth-button flex-row justify-center items-center gap-2", (!isFormValid || saving) && "auth-button-disabled")}
-            disabled={!isFormValid || saving}
+            className={clsx("auth-button flex-row justify-center items-center gap-2", (!isFormValid || saving || isInteractionDisabled) && "auth-button-disabled")}
+            disabled={!isFormValid || saving || isInteractionDisabled}
             onPress={handleSave}
           >
             {saving && <ActivityIndicator size="small" color="#081126" />}

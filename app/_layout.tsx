@@ -47,14 +47,14 @@ function InitialLayout() {
   useEffect(() => {
     if (isLoaded && isSignedIn && user) {
       // Restore Preferred Currency
-      const metadataCurrency = user.unsafeMetadata?.preferredCurrency as 'TRY' | 'USD' | 'EUR';
-      if (metadataCurrency) {
+      const metadataCurrency = user.unsafeMetadata?.preferredCurrency;
+      if (metadataCurrency === 'TRY' || metadataCurrency === 'USD' || metadataCurrency === 'EUR') {
         setPreferredCurrency(metadataCurrency);
       }
       
       // Restore Preferred Language
-      const metadataLang = user.unsafeMetadata?.language as 'en' | 'tr';
-      if (metadataLang) {
+      const metadataLang = user.unsafeMetadata?.language;
+      if (metadataLang === 'en' || metadataLang === 'tr') {
         changeLanguage(metadataLang);
       }
     }

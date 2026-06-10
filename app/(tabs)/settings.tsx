@@ -3,7 +3,7 @@ import { useClerk, useUser } from "@clerk/expo";
 import { styled } from "nativewind";
 import { useAnalytics } from "@/lib/analytics";
 import React, { useState } from "react";
-import { Image, Pressable, Text, View, Modal, TextInput, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from "react-native";
+import { Image, Pressable, Text, View, Modal, TextInput, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Alert } from "react-native";
 import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { changeLanguage } from "@/lib/i18n";
@@ -32,7 +32,6 @@ const Settings = () => {
 
   const handleLanguageToggle = async () => {
     const nextLang = currentLang === "en" ? "tr" : "en";
-    await changeLanguage(nextLang);
     if (user) {
       try {
         await user.update({
@@ -41,9 +40,16 @@ const Settings = () => {
             language: nextLang,
           }
         });
+        await changeLanguage(nextLang);
       } catch (e) {
         console.error("Failed to sync preferred language to Clerk:", e);
+        Alert.alert(
+          t("details.error", { defaultValue: "Error" }),
+          t("profile.saveError", { defaultValue: "Failed to update profile. Please try again." })
+        );
       }
+    } else {
+      await changeLanguage(nextLang);
     }
   };
 
@@ -285,7 +291,6 @@ const Settings = () => {
                       key={curr}
                       className={clsx("picker-option", isActive && "picker-option-active")}
                       onPress={async () => {
-                        await setPreferredCurrency(curr);
                         if (user) {
                           try {
                             await user.update({
@@ -294,9 +299,16 @@ const Settings = () => {
                                 preferredCurrency: curr,
                               }
                             });
+                            await setPreferredCurrency(curr);
                           } catch (e) {
                             console.error("Failed to sync preferred currency to Clerk:", e);
+                            Alert.alert(
+                              t("details.error", { defaultValue: "Error" }),
+                              t("profile.saveError", { defaultValue: "Failed to update profile. Please try again." })
+                            );
                           }
+                        } else {
+                          await setPreferredCurrency(curr);
                         }
                         setCurrencyModalVisible(false);
                       }}
