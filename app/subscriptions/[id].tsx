@@ -288,7 +288,7 @@ const SubscriptionDetails = () => {
         {!isEditing ? (
           <View className="bg-card border border-border rounded-3xl p-5 gap-4 mb-6">
             {/* Status */}
-            <View className="flex-row justify-between items-center py-2 border-b border-border/40">
+            <View className="flex-row justify-between items-center py-2 border-b border-border">
               <Text className="text-sm font-sans-semibold text-muted-foreground">
                 {t('details.fields.status', { defaultValue: 'Status' })}
               </Text>
@@ -302,7 +302,7 @@ const SubscriptionDetails = () => {
             </View>
 
             {/* Category */}
-            <View className="flex-row justify-between items-center py-2 border-b border-border/40">
+            <View className="flex-row justify-between items-center py-2 border-b border-border">
               <Text className="text-sm font-sans-semibold text-muted-foreground">{t('details.fields.category')}</Text>
               <Text className="text-base font-sans-bold text-primary">
                 {sub.category ? t(`categories.${sub.category}`, { defaultValue: sub.category }) : t('categories.Other', { defaultValue: 'Other' })}
@@ -310,7 +310,7 @@ const SubscriptionDetails = () => {
             </View>
 
             {/* Billing */}
-            <View className="flex-row justify-between items-center py-2 border-b border-border/40">
+            <View className="flex-row justify-between items-center py-2 border-b border-border">
               <Text className="text-sm font-sans-semibold text-muted-foreground">{t('details.fields.billing')}</Text>
               <Text className="text-base font-sans-bold text-primary">
                 {sub.billing === "Monthly" ? t('common.monthly', { defaultValue: 'Monthly' }) : t('common.yearly', { defaultValue: 'Yearly' })}
@@ -318,7 +318,7 @@ const SubscriptionDetails = () => {
             </View>
 
             {/* Payment Method */}
-            <View className="flex-row justify-between items-center py-2 border-b border-border/40">
+            <View className="flex-row justify-between items-center py-2 border-b border-border">
               <Text className="text-sm font-sans-semibold text-muted-foreground">{t('details.fields.paymentMethod')}</Text>
               <Text className="text-base font-sans-bold text-primary" numberOfLines={1}>
                 {sub.paymentMethod || t('card.notProvided', { defaultValue: 'Not Provided' })}
@@ -326,7 +326,7 @@ const SubscriptionDetails = () => {
             </View>
 
             {/* Start Date */}
-            <View className="flex-row justify-between items-center py-2 border-b border-border/40">
+            <View className="flex-row justify-between items-center py-2 border-b border-border">
               <Text className="text-sm font-sans-semibold text-muted-foreground">
                 {t('details.fields.started', { defaultValue: 'Started' })}
               </Text>

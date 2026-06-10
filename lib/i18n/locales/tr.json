@@ -22,7 +22,8 @@
     "cancel": "İptal",
     "enabled": "Aktif",
     "sub_one": "abonelik",
-    "sub_other": "abonelik"
+    "sub_other": "abonelik",
+    "viewAll": "Tümünü Gör"
   },
   "card": {
     "viewDetails": "Detayları Gör",
@@ -39,7 +40,17 @@
     "upcoming": "Yaklaşan Ödemeler",
     "allSubscriptions": "Tüm Abonelikler",
     "noUpcoming": "Yaklaşan ödeme bulunmuyor.",
-    "noSubscriptions": "Abonelik bulunamadı. Başlamak için ilk aboneliğinizi ekleyin!"
+    "noSubscriptions": "Abonelik bulunamadı. Başlamak için ilk aboneliğinizi ekleyin!",
+    "budgetProgress": "Bütçe İlerlemesi",
+    "budgetLimit": "Aylık Bütçe Limiti",
+    "budgetSpendPercentage": "Bütçenin %{{percent}}'i kullanıldı",
+    "budgetOverspent": "Bütçe {{amount}} aşıldı!",
+    "budgetLimitText": "{{spend}} / {{limit}}",
+    "daysLeft_one": "{{count}} gün kaldı",
+    "daysLeft_other": "{{count}} gün kaldı",
+    "lastDay": "Son Gün",
+    "noBudgetSet": "Henüz bütçe belirlenmedi",
+    "tapToSetBudget": "Aylık limitinizi belirlemek için dokunun"
   },
   "subscriptions": {
     "title": "Abonelikler",
@@ -138,6 +149,7 @@
     "frequencyMonthly": "Aylık",
     "frequencyYearly": "Yıllık",
     "categoryLabel": "Kategori",
+    "currencyLabel": "Para Birimi",
     "submit": "Abonelik Ekle"
   },
   "settings": {
@@ -145,10 +157,49 @@
     "notifications": "Bildirimler",
     "notificationsValue": "Açık",
     "currency": "Para Birimi",
+    "selectPreferredCurrencyTitle": "Tercih Edilen Para Birimi",
+    "selectCurrencyDesc": "Aylık harcamalarınızı ve raporlarınızı birleştirmek ve dönüştürmek için genel para birimini seçin.",
     "helpSupport": "Yardım & Destek",
     "signOut": "Çıkış Yap",
     "language": "Dil",
     "english": "English",
-    "turkish": "Türkçe"
+    "turkish": "Türkçe",
+    "monthlyBudget": "Aylık Bütçe",
+    "editBudgetTitle": "Aylık Bütçeyi Düzenle",
+    "budgetInputPlaceholder": "Aylık bütçenizi girin",
+    "save": "Kaydet",
+    "notSet": "Belirlenmedi"
+  },
+  "upcomingModal": {
+    "title": "Yaklaşan Ödemeler",
+    "dueSevenDays": "7 Günlük Gider",
+    "dueThirtyDays": "30 Günlük Gider",
+    "thisWeek": "Bu Hafta",
+    "nextWeek": "Gelecek Hafta",
+    "restOfMonth": "Ayın Geri Kalanı",
+    "noPayments": "Bu dönemde ödenecek fatura bulunmuyor",
+    "markAsPaid": "Ödendi Olarak İşaretle"
+  },
+  "auth": {
+    "title": "Tekrar Hoş Geldiniz",
+    "subtitle": "Tekrarlanan aboneliklerinizi takip etmek, yönetmek ve optimize etmek için giriş yapın",
+    "emailLabel": "E-posta Adresi",
+    "emailPlaceholder": "E-postanızı girin",
+    "passwordLabel": "Şifre",
+    "passwordPlaceholder": "Şifrenizi girin",
+    "buttonSignIn": "Giriş Yap",
+    "dontHaveAccount": "Hesabınız yok mu?",
+    "linkSignUp": "Kayıt ol",
+    "mfa": {
+      "title": "İki Adımlı Doğrulama",
+      "totpSubtitle": "Giriş yapmak için kimlik doğrulama uygulamanızdaki kodu girin.",
+      "phoneSubtitle": "Telefonunuza bir doğrulama kodu gönderdik. Giriş yapmak için aşağıya girin.",
+      "emailSubtitle": "E-postanıza bir doğrulama kodu gönderdik. Giriş yapmak için aşağıya girin.",
+      "codeLabel": "Doğrulama Kodu",
+      "codePlaceholder": "Kodu girin",
+      "buttonVerify": "Doğrula",
+      "buttonResend": "Doğrulama kodunu tekrar gönder",
+      "backToSignIn": "Giriş Ekranına Dön"
+    }
   }
 }

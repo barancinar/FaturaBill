@@ -9,31 +9,39 @@ import dayjs from "dayjs";
  * @param currency - The currency code (e.g., 'USD', 'EUR', 'TRY'), defaults to 'USD'
  * @returns Formatted currency string
  */
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  USD: '$',
+  EUR: '€',
+  TRY: '₺',
+};
+
 export function formatCurrency(
   value: number | string,
   currency: string = 'USD'
 ): string {
+  const currUpper = currency.toUpperCase();
+  const symbol = CURRENCY_SYMBOLS[currUpper] || currUpper;
+
   try {
     const parsedValue = typeof value === 'string' ? parseFloat(value) : value;
     
     if (parsedValue === null || parsedValue === undefined || isNaN(parsedValue)) {
-      return '$0.00';
+      return `${symbol}0.00`;
     }
 
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
+    const formattedNum = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(parsedValue);
+
+    return `${symbol}${formattedNum}`;
   } catch (error) {
     const parsedValue = typeof value === 'string' ? parseFloat(value) : value;
     if (parsedValue === null || parsedValue === undefined || isNaN(parsedValue)) {
-      return '$0.00';
+      return `${symbol}0.00`;
     }
 
-    // Standard U.S. money fallback with exactly two decimal places
-    return `$${parsedValue.toFixed(2)}`;
+    return `${symbol}${parsedValue.toFixed(2)}`;
   }
 }
 

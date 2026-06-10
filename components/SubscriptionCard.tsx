@@ -38,7 +38,7 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
     <Pressable onPress={onPress} className={clsx('sub-card', expanded ? 'sub-card-expanded' : 'bg-card')} style={!expanded && color ? {backgroundColor:color}:undefined}>
       <View className='sub-head'>
         <View className="sub-main">
-            <Image source={icon} className="sub-icon" />
+            <Image source={icon} className="sub-icon" style={{ width: 64, height: 64 }} />
             <View className="sub-copy">
                 <Text numberOfLines={1} className="sub-title">{name}</Text>
                 <Text numberOfLines={1} ellipsizeMode='tail' className='sub-meta'>
