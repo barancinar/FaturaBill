@@ -16,7 +16,7 @@ const UpcomingSubscriptionCard = ({name, price, daysLeft, icon, currency}: Upcom
   return (
     <View className='upcoming-card'>
         <View className="upcoming-row">
-            <Image source={icon} className="upcoming-icon" />
+            <Image source={icon} className="upcoming-icon" style={{ width: 56, height: 56 }} />
             <View className="flex-1 min-w-0">
                 <Text className='upcoming-price' numberOfLines={1} ellipsizeMode="tail">{formatCurrency(price, currency)}</Text>
                 <Text className='upcoming-meta' numberOfLines={1} ellipsizeMode="tail">{getDaysLeftText()}</Text>
