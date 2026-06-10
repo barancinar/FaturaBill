@@ -1,13 +1,13 @@
 import "@/global.css";
-import { initLanguage } from "@/lib/i18n";
+import { initLanguage, changeLanguage } from "@/lib/i18n";
 import { useFonts } from "expo-font";
 import { SplashScreen, Stack, useRouter, useSegments, useRootNavigationState } from "expo-router";
 import { useEffect, useState } from "react";
-import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/expo";
+import { ClerkProvider, ClerkLoaded, useAuth, useUser } from "@clerk/expo";
 import { tokenCache } from "@/clerk/tokenCache";
 import { setAuthSession } from "@/lib/store";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
-import { initSettingsStore, fetchLatestRates } from "@/lib/settingsStore";
+import { initSettingsStore, fetchLatestRates, setPreferredCurrency } from "@/lib/settingsStore";
 
 
 
@@ -35,12 +35,30 @@ if (!posthogHost) {
 
 function InitialLayout() {
   const { isLoaded, isSignedIn, userId, getToken } = useAuth();
+  const { user } = useUser();
   const posthog = usePostHog();
   const segments = useSegments();
   const router = useRouter();
   const navigationState = useRootNavigationState();
 
   console.log("[InitialLayout] Rendered", { isLoaded, isSignedIn, segments, navReady: !!navigationState?.key });
+
+  // Sync preferences from Clerk unsafeMetadata when user is loaded
+  useEffect(() => {
+    if (isLoaded && isSignedIn && user) {
+      // Restore Preferred Currency
+      const metadataCurrency = user.unsafeMetadata?.preferredCurrency as 'TRY' | 'USD' | 'EUR';
+      if (metadataCurrency) {
+        setPreferredCurrency(metadataCurrency);
+      }
+      
+      // Restore Preferred Language
+      const metadataLang = user.unsafeMetadata?.language as 'en' | 'tr';
+      if (metadataLang) {
+        changeLanguage(metadataLang);
+      }
+    }
+  }, [isLoaded, isSignedIn, user]);
 
   // Sync user authentication status to PostHog session
   useEffect(() => {

@@ -170,6 +170,25 @@
     "save": "Save",
     "notSet": "Not Set"
   },
+  "profile": {
+    "title": "Edit Profile",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "bio": "Bio / Note",
+    "saveSuccess": "Profile updated successfully!",
+    "saveError": "Failed to update profile. Please try again.",
+    "pickImageError": "Failed to select image.",
+    "saving": "Saving...",
+    "editPhoto": "Edit Photo",
+    "fields": {
+      "placeholderFirstName": "Enter your first name",
+      "placeholderLastName": "Enter your last name",
+      "placeholderPhone": "Enter your phone number",
+      "placeholderBio": "Enter a short bio or notes..."
+    }
+  },
   "upcomingModal": {
     "title": "Upcoming Payments",
     "dueSevenDays": "Due in 7 Days",

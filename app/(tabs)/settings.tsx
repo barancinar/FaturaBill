@@ -11,6 +11,7 @@ import { useMonthlyBudget, setMonthlyBudget, usePreferredCurrency, setPreferredC
 import { formatCurrency } from "@/lib/utils";
 import { getDisplayRates } from "@/lib/currency";
 import { clsx } from "clsx";
+import { useRouter } from "expo-router";
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -19,6 +20,7 @@ const Settings = () => {
   const { signOut } = useClerk();
   const { trackSignOut, trackSignOutFailure, trackAppError } = useAnalytics();
   const { t, i18n } = useTranslation();
+  const router = useRouter();
 
   const budget = useMonthlyBudget();
   const preferredCurrency = usePreferredCurrency();
@@ -31,6 +33,18 @@ const Settings = () => {
   const handleLanguageToggle = async () => {
     const nextLang = currentLang === "en" ? "tr" : "en";
     await changeLanguage(nextLang);
+    if (user) {
+      try {
+        await user.update({
+          unsafeMetadata: {
+            ...user.unsafeMetadata,
+            language: nextLang,
+          }
+        });
+      } catch (e) {
+        console.error("Failed to sync preferred language to Clerk:", e);
+      }
+    }
   };
 
   const emailAddress = user?.emailAddresses?.[0]?.emailAddress;
@@ -73,18 +87,24 @@ const Settings = () => {
 
       {/* Profile Card */}
       {user && (
-        <View className="items-center bg-card border border-border rounded-3xl p-6 mb-6">
+        <Pressable
+          onPress={() => router.push("/profile")}
+          className="flex-row items-center bg-card border border-border rounded-3xl p-5 mb-6 active:opacity-85"
+        >
           <Image
             source={user.imageUrl ? { uri: user.imageUrl } : images.avatar}
-            className="w-20 h-20 rounded-full border-2 border-accent mb-3"
+            className="w-16 h-16 rounded-full border-2 border-accent"
           />
-          <Text className="text-xl font-sans-bold text-primary">
-            {displayName}
-          </Text>
-          <Text className="text-sm font-sans-medium text-muted-foreground mt-1">
-            {emailAddress || ""}
-          </Text>
-        </View>
+          <View className="flex-1 ml-4 justify-center">
+            <Text className="text-xl font-sans-bold text-primary">
+              {displayName}
+            </Text>
+            <Text className="text-sm font-sans-medium text-muted-foreground mt-0.5">
+              {emailAddress || ""}
+            </Text>
+          </View>
+          <Text className="text-xl font-sans-bold text-accent px-2">›</Text>
+        </Pressable>
       )}
 
       {/* Settings Options */}
@@ -266,6 +286,18 @@ const Settings = () => {
                       className={clsx("picker-option", isActive && "picker-option-active")}
                       onPress={async () => {
                         await setPreferredCurrency(curr);
+                        if (user) {
+                          try {
+                            await user.update({
+                              unsafeMetadata: {
+                                ...user.unsafeMetadata,
+                                preferredCurrency: curr,
+                              }
+                            });
+                          } catch (e) {
+                            console.error("Failed to sync preferred currency to Clerk:", e);
+                          }
+                        }
                         setCurrencyModalVisible(false);
                       }}
                     >
