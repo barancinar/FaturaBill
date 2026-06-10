@@ -179,5 +179,27 @@
     "restOfMonth": "Rest of the Month",
     "noPayments": "No payments due in this period",
     "markAsPaid": "Mark as Paid"
+  },
+  "auth": {
+    "title": "Welcome Back",
+    "subtitle": "Sign in to track, manage, and optimize your recurring subscriptions",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter your email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "buttonSignIn": "Sign In",
+    "dontHaveAccount": "Don't have an account?",
+    "linkSignUp": "Sign up",
+    "mfa": {
+      "title": "Two-Factor Verification",
+      "totpSubtitle": "Enter the code from your authenticator app to sign in.",
+      "phoneSubtitle": "We have sent a verification code to your phone. Enter it below to sign in.",
+      "emailSubtitle": "We have sent a verification code to your email. Enter it below to sign in.",
+      "codeLabel": "Verification Code",
+      "codePlaceholder": "Enter code",
+      "buttonVerify": "Verify",
+      "buttonResend": "Resend verification code",
+      "backToSignIn": "Back to Sign In"
+    }
   }
 }

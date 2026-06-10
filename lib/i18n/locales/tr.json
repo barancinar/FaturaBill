@@ -179,5 +179,27 @@
     "restOfMonth": "Ayın Geri Kalanı",
     "noPayments": "Bu dönemde ödenecek fatura bulunmuyor",
     "markAsPaid": "Ödendi Olarak İşaretle"
+  },
+  "auth": {
+    "title": "Tekrar Hoş Geldiniz",
+    "subtitle": "Tekrarlanan aboneliklerinizi takip etmek, yönetmek ve optimize etmek için giriş yapın",
+    "emailLabel": "E-posta Adresi",
+    "emailPlaceholder": "E-postanızı girin",
+    "passwordLabel": "Şifre",
+    "passwordPlaceholder": "Şifrenizi girin",
+    "buttonSignIn": "Giriş Yap",
+    "dontHaveAccount": "Hesabınız yok mu?",
+    "linkSignUp": "Kayıt ol",
+    "mfa": {
+      "title": "İki Adımlı Doğrulama",
+      "totpSubtitle": "Giriş yapmak için kimlik doğrulama uygulamanızdaki kodu girin.",
+      "phoneSubtitle": "Telefonunuza bir doğrulama kodu gönderdik. Giriş yapmak için aşağıya girin.",
+      "emailSubtitle": "E-postanıza bir doğrulama kodu gönderdik. Giriş yapmak için aşağıya girin.",
+      "codeLabel": "Doğrulama Kodu",
+      "codePlaceholder": "Kodu girin",
+      "buttonVerify": "Doğrula",
+      "buttonResend": "Doğrulama kodunu tekrar gönder",
+      "backToSignIn": "Giriş Ekranına Dön"
+    }
   }
 }

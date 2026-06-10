@@ -126,116 +126,119 @@ export default function App() {
 
     const isValidBudget = tempBudget.trim() === '' || (!isNaN(parseFloat(tempBudget)) && parseFloat(tempBudget) >= 0);
 
+    const headerComponent = (
+        <>
+            <View className="home-header">
+                <View className="home-user">
+                    <Image 
+                        source={user?.imageUrl ? { uri: user.imageUrl } : images.avatar} 
+                        className="home-avatar" 
+                        style={{ width: 64, height: 64, borderRadius: 32 }}
+                        />
+                    <Text className="home-user-name">
+                        {displayName}
+                    </Text>
+                </View>
+                <Pressable onPress={() => setModalVisible(true)}>
+                    <Image source={icons.add} className="home-add-icon" style={{ width: 40, height: 40 }}/>
+                </Pressable>
+            </View>
+            
+            {/* Personalized Budget Progress Card */}
+            {budget === null ? (
+                <Pressable 
+                    onPress={() => {
+                        setTempBudget('');
+                        setBudgetModalVisible(true);
+                    }}
+                    className="my-2.5 min-h-36 justify-center items-center gap-2 rounded-bl-4xl rounded-tr-4xl bg-card border-2 border-dashed border-accent/20 p-6 shadow-sm"
+                >
+                    <Image source={icons.setting} className="size-8 opacity-60" style={{ width: 32, height: 32 }} />
+                    <Text className="text-lg font-sans-bold text-primary/80 text-center">
+                        {t("home.noBudgetSet", { defaultValue: "No budget set yet" })}
+                    </Text>
+                    <Text className="text-xs font-sans-semibold text-accent text-center mt-1">
+                        {t("home.tapToSetBudget", { defaultValue: "Tap here to set your monthly limit" })}
+                    </Text>
+                </Pressable>
+            ) : (
+                <Pressable 
+                    onPress={() => {
+                        setTempBudget(budget.toString());
+                        setBudgetModalVisible(true);
+                    }}
+                    className="my-2.5 min-h-50 justify-between gap-4 rounded-bl-4xl rounded-tr-4xl bg-primary p-6 border border-white/10 shadow-lg shadow-black/20"
+                >
+                    <View className="flex-row justify-between items-center">
+                        <Text className="text-lg font-sans-bold text-white/70">
+                            {t("home.budgetProgress", { defaultValue: "Budget Progress" })}
+                        </Text>
+                        <Text className="text-sm font-sans-medium text-white/60">
+                            {t("home.budgetLimitText", { spend: formatCurrency(totalActiveSpend, preferredCurrency), limit: formatCurrency(budget, preferredCurrency), defaultValue: `${formatCurrency(totalActiveSpend, preferredCurrency)} of ${formatCurrency(budget, preferredCurrency)}` })}
+                        </Text>
+                    </View>
+
+                    <View className="my-1">
+                        <View className="flex-row justify-between items-baseline mb-2">
+                            <Text className="text-3xl font-sans-extrabold text-white">
+                                {formatCurrency(totalActiveSpend, preferredCurrency)}
+                            </Text>
+                            <Text className={clsx("text-sm font-sans-bold", displayPercent > 90 ? "text-destructive" : displayPercent > 70 ? "text-accent" : "text-subscription")}>
+                                {t("home.budgetSpendPercentage", { percent: displayPercent, defaultValue: `${displayPercent}% of budget used` })}
+                            </Text>
+                        </View>
+
+                        {/* Sleek Progress Bar */}
+                        <View className="h-3 w-full bg-white/10 rounded-full overflow-hidden">
+                            <View 
+                                className={clsx("h-full rounded-full", 
+                                    displayPercent > 90 ? "bg-destructive" : displayPercent > 70 ? "bg-accent" : "bg-subscription"
+                                )}
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </View>
+                    </View>
+
+                    {/* Sub-label / status info */}
+                    <View className="flex-row justify-between items-center mt-1">
+                        <Text className="text-xs font-sans-medium text-white/50">
+                            {t("home.budgetLimit", { defaultValue: "Monthly Budget Limit" })}: {formatCurrency(budget, preferredCurrency)}
+                        </Text>
+                        {totalActiveSpend > budget && (
+                            <Text className="text-xs font-sans-bold text-destructive bg-destructive/10 border border-destructive/20 rounded-full px-2.5 py-0.5 animate-pulse">
+                                {t("home.budgetOverspent", { amount: formatCurrency(totalActiveSpend - budget, preferredCurrency), defaultValue: `Overspent by ${formatCurrency(totalActiveSpend - budget, preferredCurrency)}!` })}
+                            </Text>
+                        )}
+                    </View>
+                </Pressable>
+            )}
+
+             <View className="mb-5">
+                 <ListHeading 
+                     title={t("home.upcoming", { defaultValue: "Upcoming" })}
+                     onPress={() => setUpcomingPaymentsModalVisible(true)}
+                 />
+                 <FlatList
+                     data={upcomingSubscriptions}
+                     renderItem={({ item }) => <UpcomingSubscriptionCard {...item} />}
+                     keyExtractor={(item) => item.id }
+                     horizontal
+                     showsHorizontalScrollIndicator={false}
+                     ListEmptyComponent={<Text className="home-empty-state">{t("home.noUpcoming", { defaultValue: "No upcoming renewals yet." })}</Text>}
+                 />
+             </View>
+             <ListHeading 
+                 title={t("home.allSubscriptions", { defaultValue: "All Subscriptions" })}
+                 onPress={() => router.push('/subscriptions')}
+             />
+
+        </>
+    );
+
     return (
         <SafeAreaView className="flex-1 bg-background p-5">
                 <FlatList
-                    ListHeaderComponent={() => (
-                        <>
-                            <View className="home-header">
-                                <View className="home-user">
-                                    <Image 
-                                        source={user?.imageUrl ? { uri: user.imageUrl } : images.avatar} 
-                                        className="home-avatar" 
-                                        />
-                                    <Text className="home-user-name">
-                                        {displayName}
-                                    </Text>
-                                </View>
-                                <Pressable onPress={() => setModalVisible(true)}>
-                                    <Image source={icons.add} className="home-add-icon"/>
-                                </Pressable>
-                            </View>
-                            
-                            {/* Personalized Budget Progress Card */}
-                            {budget === null ? (
-                                <Pressable 
-                                    onPress={() => {
-                                        setTempBudget('');
-                                        setBudgetModalVisible(true);
-                                    }}
-                                    className="my-2.5 min-h-36 justify-center items-center gap-2 rounded-bl-4xl rounded-tr-4xl bg-card border-2 border-dashed border-accent/20 p-6 shadow-sm"
-                                >
-                                    <Image source={icons.setting} className="size-8 opacity-60" />
-                                    <Text className="text-lg font-sans-bold text-primary/80 text-center">
-                                        {t("home.noBudgetSet", { defaultValue: "No budget set yet" })}
-                                    </Text>
-                                    <Text className="text-xs font-sans-semibold text-accent text-center mt-1">
-                                        {t("home.tapToSetBudget", { defaultValue: "Tap here to set your monthly limit" })}
-                                    </Text>
-                                </Pressable>
-                            ) : (
-                                <Pressable 
-                                    onPress={() => {
-                                        setTempBudget(budget.toString());
-                                        setBudgetModalVisible(true);
-                                    }}
-                                    className="my-2.5 min-h-50 justify-between gap-4 rounded-bl-4xl rounded-tr-4xl bg-primary p-6 border border-white/10 shadow-lg shadow-black/20"
-                                >
-                                    <View className="flex-row justify-between items-center">
-                                        <Text className="text-lg font-sans-bold text-white/70">
-                                            {t("home.budgetProgress", { defaultValue: "Budget Progress" })}
-                                        </Text>
-                                        <Text className="text-sm font-sans-medium text-white/60">
-                                            {t("home.budgetLimitText", { spend: formatCurrency(totalActiveSpend, preferredCurrency), limit: formatCurrency(budget, preferredCurrency), defaultValue: `${formatCurrency(totalActiveSpend, preferredCurrency)} of ${formatCurrency(budget, preferredCurrency)}` })}
-                                        </Text>
-                                    </View>
- 
-                                    <View className="my-1">
-                                        <View className="flex-row justify-between items-baseline mb-2">
-                                            <Text className="text-3xl font-sans-extrabold text-white">
-                                                {formatCurrency(totalActiveSpend, preferredCurrency)}
-                                            </Text>
-                                            <Text className={clsx("text-sm font-sans-bold", displayPercent > 90 ? "text-destructive" : displayPercent > 70 ? "text-accent" : "text-subscription")}>
-                                                {t("home.budgetSpendPercentage", { percent: displayPercent, defaultValue: `${displayPercent}% of budget used` })}
-                                            </Text>
-                                        </View>
- 
-                                        {/* Sleek Progress Bar */}
-                                        <View className="h-3 w-full bg-white/10 rounded-full overflow-hidden">
-                                            <View 
-                                                className={clsx("h-full rounded-full", 
-                                                    displayPercent > 90 ? "bg-destructive" : displayPercent > 70 ? "bg-accent" : "bg-subscription"
-                                                )}
-                                                style={{ width: `${progressPercent}%` }}
-                                            />
-                                        </View>
-                                    </View>
- 
-                                    {/* Sub-label / status info */}
-                                    <View className="flex-row justify-between items-center mt-1">
-                                        <Text className="text-xs font-sans-medium text-white/50">
-                                            {t("home.budgetLimit", { defaultValue: "Monthly Budget Limit" })}: {formatCurrency(budget, preferredCurrency)}
-                                        </Text>
-                                        {totalActiveSpend > budget && (
-                                            <Text className="text-xs font-sans-bold text-destructive bg-destructive/10 border border-destructive/20 rounded-full px-2.5 py-0.5 animate-pulse">
-                                                {t("home.budgetOverspent", { amount: formatCurrency(totalActiveSpend - budget, preferredCurrency), defaultValue: `Overspent by ${formatCurrency(totalActiveSpend - budget, preferredCurrency)}!` })}
-                                            </Text>
-                                        )}
-                                    </View>
-                                </Pressable>
-                            )}
- 
-                             <View className="mb-5">
-                                 <ListHeading 
-                                     title={t("home.upcoming", { defaultValue: "Upcoming" })}
-                                     onPress={() => setUpcomingPaymentsModalVisible(true)}
-                                 />
-                                 <FlatList
-                                     data={upcomingSubscriptions}
-                                     renderItem={({ item }) => <UpcomingSubscriptionCard {...item} />}
-                                     keyExtractor={(item) => item.id }
-                                     horizontal
-                                     showsHorizontalScrollIndicator={false}
-                                     ListEmptyComponent={<Text className="home-empty-state">{t("home.noUpcoming", { defaultValue: "No upcoming renewals yet." })}</Text>}
-                                 />
-                             </View>
-                             <ListHeading 
-                                 title={t("home.allSubscriptions", { defaultValue: "All Subscriptions" })}
-                                 onPress={() => router.push('/subscriptions')}
-                             />
-            
-                        </>
-                    )}
+                    ListHeaderComponent={headerComponent}
                     data={subscriptions}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (

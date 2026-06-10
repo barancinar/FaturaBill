@@ -6,7 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 import { useAnalytics } from '@/lib/analytics';
 import { useTranslation } from 'react-i18next';
-import i18n from 'i18next';
+type MfaStrategy = 'totp' | 'phone_code' | 'email_code';
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -18,75 +18,40 @@ export default function SignIn() {
   const { trackSignInStart, trackSignInSuccess, trackSignInFailure, trackAppError } = useAnalytics();
   const { t } = useTranslation();
 
-  // Load translations dynamically for Sign In
-  React.useEffect(() => {
-    if (i18n.isInitialized) {
-      i18n.addResourceBundle('en', 'translation', {
-        common: {
-          appName: "FaturaBill",
-          appSubtitle: "Subscription Tracker"
-        },
-        auth: {
-          title: "Welcome Back",
-          subtitle: "Sign in to track, manage, and optimize your recurring subscriptions",
-          emailLabel: "Email Address",
-          emailPlaceholder: "Enter your email",
-          passwordLabel: "Password",
-          passwordPlaceholder: "Enter your password",
-          buttonSignIn: "Sign In",
-          dontHaveAccount: "Don't have an account?",
-          linkSignUp: "Sign up",
-          mfa: {
-            title: "Two-Factor Verification",
-            totpSubtitle: "Enter the code from your authenticator app to sign in.",
-            phoneSubtitle: "We have sent a verification code to your phone. Enter it below to sign in.",
-            emailSubtitle: "We have sent a verification code to your email. Enter it below to sign in.",
-            codeLabel: "Verification Code",
-            codePlaceholder: "Enter code",
-            buttonVerify: "Verify",
-            buttonResend: "Resend verification code",
-            backToSignIn: "Back to Sign In"
-          }
-        }
-      }, true, true);
-      i18n.addResourceBundle('tr', 'translation', {
-        common: {
-          appName: "FaturaBill",
-          appSubtitle: "Abonelik Takipçisi"
-        },
-        auth: {
-          title: "Tekrar Hoş Geldiniz",
-          subtitle: "Tekrarlanan aboneliklerinizi takip etmek, yönetmek ve optimize etmek için giriş yapın",
-          emailLabel: "E-posta Adresi",
-          emailPlaceholder: "E-postanızı girin",
-          passwordLabel: "Şifre",
-          passwordPlaceholder: "Şifrenizi girin",
-          buttonSignIn: "Giriş Yap",
-          dontHaveAccount: "Hesabınız yok mu?",
-          linkSignUp: "Kayıt ol",
-          mfa: {
-            title: "İki Adımlı Doğrulama",
-            totpSubtitle: "Giriş yapmak için kimlik doğrulama uygulamanızdaki kodu girin.",
-            phoneSubtitle: "Telefonunuza bir doğrulama kodu gönderdik. Giriş yapmak için aşağıya girin.",
-            emailSubtitle: "E-postanıza bir doğrulama kodu gönderdik. Giriş yapmak için aşağıya girin.",
-            codeLabel: "Doğrulama Kodu",
-            codePlaceholder: "Kodu girin",
-            buttonVerify: "Doğrula",
-            buttonResend: "Doğrulama kodunu tekrar gönder",
-            backToSignIn: "Giriş Ekranına Dön"
-          }
-        }
-      }, true, true);
-    }
-  }, []);
-
   console.log("[SignIn] Component rendered", { fetchStatus, hasSignIn: !!signIn, hasErrors: !!errors });
 
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false);
   const [mfaCode, setMfaCode] = useState('');
-  const [mfaStrategy, setMfaStrategy] = useState<any>(null);
+  const [mfaStrategy, setMfaStrategy] = useState<MfaStrategy | null>(null);
+
+  const handleFinalizeNavigation = async (onUserIdCaptured: (id: string) => void) => {
+    if (!signIn) return;
+    await signIn.finalize({
+      navigate: ({ session, decorateUrl }) => {
+        if (session?.user?.id) {
+          onUserIdCaptured(session.user.id);
+        }
+        if (session?.currentTask) {
+          console.log('Pending session task:', session.currentTask);
+          return;
+        }
+        const url = decorateUrl('/');
+        if (url.startsWith('http') || url.includes('://')) {
+          if (typeof window !== 'undefined' && window.location && typeof window.location.assign === 'function') {
+            window.location.assign(url);
+          } else if (typeof window !== 'undefined' && window.location) {
+            window.location.href = url;
+          } else {
+            router.push(url as Href);
+          }
+        } else {
+          router.push(url as Href);
+        }
+      },
+    });
+  };
 
   const isReady = isLoaded;
   const isSubmitting = fetchStatus === 'fetching';
@@ -110,31 +75,7 @@ export default function SignIn() {
 
       if (signIn.status === 'complete') {
         let userId = '';
-
-        await signIn.finalize({
-          navigate: ({ session, decorateUrl }) => {
-            if (session?.user?.id) {
-              userId = session.user.id;
-            }
-            if (session?.currentTask) {
-              console.log('Pending session task:', session.currentTask);
-              return;
-            }
-            const url = decorateUrl('/');
-            if (url.startsWith('http') || url.includes('://')) {
-              if (typeof window !== 'undefined' && window.location && typeof window.location.assign === 'function') {
-                window.location.assign(url);
-              } else if (typeof window !== 'undefined' && window.location) {
-                window.location.href = url;
-              } else {
-                router.push(url as Href);
-              }
-            } else {
-              router.push(url as Href);
-            }
-          },
-        });
-
+        await handleFinalizeNavigation(id => userId = id);
         trackSignInSuccess(userId);
       } else if (signIn.status === 'needs_second_factor') {
         console.log('SignIn status is needs_second_factor. Supported factors:', signIn.supportedSecondFactors);
@@ -208,31 +149,7 @@ export default function SignIn() {
 
       if (signIn.status === 'complete') {
         let userId = '';
-
-        await signIn.finalize({
-          navigate: ({ session, decorateUrl }) => {
-            if (session?.user?.id) {
-              userId = session.user.id;
-            }
-            if (session?.currentTask) {
-              console.log('Pending session task:', session.currentTask);
-              return;
-            }
-            const url = decorateUrl('/');
-            if (url.startsWith('http') || url.includes('://')) {
-              if (typeof window !== 'undefined' && window.location && typeof window.location.assign === 'function') {
-                window.location.assign(url);
-              } else if (typeof window !== 'undefined' && window.location) {
-                window.location.href = url;
-              } else {
-                router.push(url as Href);
-              }
-            } else {
-              router.push(url as Href);
-            }
-          },
-        });
-
+        await handleFinalizeNavigation(id => userId = id);
         trackSignInSuccess(userId);
       } else {
         console.warn('MFA Sign-in status incomplete:', signIn.status);
