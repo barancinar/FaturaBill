@@ -34,10 +34,11 @@ const TabLayout = () => {
                     borderRadius: tabBar.radius,
                     backgroundColor: colors.primary,
                     borderTopWidth: 0,
-                    elevation: 0,
+                    elevation: 5,
+                    zIndex: 99,
                 },
                 tabBarItemStyle: {
-                    paddingVertical: tabBar.height / 2 - tabBar.iconFrame /1.6,
+                    paddingVertical: tabBar.height / 2 - tabBar.iconFrame / 1.6,
                 },
                 tabBarIconStyle: {
                     width: tabBar.iconFrame,

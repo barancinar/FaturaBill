@@ -170,6 +170,26 @@
     "save": "Kaydet",
     "notSet": "Belirlenmedi"
   },
+  "profile": {
+    "title": "Profili Düzenle",
+    "firstName": "Adı",
+    "lastName": "Soyadı",
+    "email": "E-posta Adresi",
+    "phone": "Telefon Numarası",
+    "bio": "Hakkında / Not",
+    "saveSuccess": "Profil başarıyla güncellendi!",
+    "saveError": "Profil güncellenemedi. Lütfen tekrar deneyin.",
+    "pickImageError": "Fotoğraf seçilemedi.",
+    "permissionError": "Profil fotoğrafınızı güncelleyebilmek için fotoğraf galerinize erişim izni vermeniz gerekiyor. Lütfen cihaz ayarlarınızdan bunu etkinleştirin.",
+    "saving": "Kaydediliyor...",
+    "editPhoto": "Fotoğrafı Değiştir",
+    "fields": {
+      "placeholderFirstName": "Adınızı girin",
+      "placeholderLastName": "Soyadınızı girin",
+      "placeholderPhone": "Telefon numaranızı girin",
+      "placeholderBio": "Kısa bir biyografi veya not girin..."
+    }
+  },
   "upcomingModal": {
     "title": "Yaklaşan Ödemeler",
     "dueSevenDays": "7 Günlük Gider",
