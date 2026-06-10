@@ -60,7 +60,7 @@ function InitialLayout() {
         setAuthSession(null, null);
       }
     }
-  }, [isLoaded, isSignedIn, userId]);
+  }, [isLoaded, isSignedIn, userId, getToken]);
 
   // Automatic Screen View Tracking
   useEffect(() => {

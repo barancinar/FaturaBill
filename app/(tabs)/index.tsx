@@ -78,7 +78,7 @@ export default function App() {
                     name: sub.name,
                     price: sub.price,
                     currency: sub.currency || 'USD',
-                    daysLeft: daysLeft < 0 ? 0 : daysLeft
+                    daysLeft: daysLeft
                 };
             })
             .filter(sub => sub.daysLeft >= 0 && sub.daysLeft <= 30)

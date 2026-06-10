@@ -8,6 +8,17 @@ const FALLBACK_RATES = {
   EUR: 0.92857
 };
 
+const isValidCurrency = (value: string | null): value is 'TRY' | 'USD' | 'EUR' => {
+  return value === 'TRY' || value === 'USD' || value === 'EUR';
+};
+
+const isValidRates = (obj: unknown): obj is Record<string, number> => {
+  if (typeof obj !== 'object' || obj === null) return false;
+  const entries = Object.entries(obj);
+  return entries.length > 0 && entries.every(([_, v]) => typeof v === 'number' && !isNaN(v));
+};
+
+
 let currentBudget: number | null = null;
 let currentUserId: string | null = null;
 let getTokenCallback: (() => Promise<string | null>) | null = null;
@@ -77,13 +88,20 @@ export const getCachedRates = (): Record<string, number> => cachedRates;
 export const initSettingsStore = async (): Promise<void> => {
   try {
     const cachedCurrency = await SecureStore.getItemAsync('preferredCurrency');
-    if (cachedCurrency) {
-      currentPreferredCurrency = cachedCurrency as 'TRY' | 'USD' | 'EUR';
+    if (isValidCurrency(cachedCurrency)) {
+      currentPreferredCurrency = cachedCurrency;
     }
 
     const cachedRatesStr = await SecureStore.getItemAsync('currencyRates');
     if (cachedRatesStr) {
-      cachedRates = JSON.parse(cachedRatesStr);
+      try {
+        const parsed = JSON.parse(cachedRatesStr);
+        if (isValidRates(parsed)) {
+          cachedRates = parsed;
+        }
+      } catch {
+        // Fallback to existing rates
+      }
     }
   } catch (error) {
     console.error('[SettingsStore] Failed to load settings from SecureStore:', error);
@@ -95,8 +113,12 @@ export const initSettingsStore = async (): Promise<void> => {
 export const fetchLatestRates = async (): Promise<void> => {
   try {
     const response = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (!response.ok) {
+      console.error(`[SettingsStore] Failed to fetch latest exchange rates: HTTP status ${response.status}`);
+      return;
+    }
     const data = await response.json();
-    if (data && data.rates) {
+    if (data && data.rates && isValidRates(data.rates)) {
       cachedRates = data.rates;
       // Filter rates to only persist supported currencies (TRY, USD, EUR)
       // to prevent SecureStore 2048-byte limit warnings.
@@ -141,6 +163,8 @@ export const bindSettingsAuth = async (
     emit();
   }
 };
+
+export const isSettingsLoaded = (): boolean => isLoaded;
 
 export const useMonthlyBudget = (): number | null => {
   const [budget, setBudget] = useState(getMonthlyBudget());

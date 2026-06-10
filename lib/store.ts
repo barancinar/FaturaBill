@@ -379,7 +379,8 @@ export const triggerSync = async (userId?: string | null, token?: string | null)
         } else {
           // Resolve Conflict: Compare timestamps (Last-Write-Wins)
           const localTime = localSub.updatedAt ? new Date(localSub.updatedAt).getTime() : 0;
-          const cloudTime = new Date(cloudSub.updated_at).getTime();
+          const rawCloudTime = cloudSub.updated_at ? new Date(cloudSub.updated_at).getTime() : 0;
+          const cloudTime = isNaN(rawCloudTime) ? 0 : rawCloudTime;
 
           if (cloudTime > localTime) {
             // Cloud is newer, overwrite local cache
@@ -588,6 +589,9 @@ export const addSubscription = async (newSub: Subscription) => {
     triggerSync();
   } catch (error) {
     console.error('Failed to add subscription to SQLite:', error);
+    subscriptions = subscriptions.filter(s => s.id !== newSub.id);
+    emit();
+    throw error;
   }
 };
 

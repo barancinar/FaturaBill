@@ -4,7 +4,7 @@ import { clsx } from 'clsx';
 import dayjs from 'dayjs';
 import { useAnalytics } from '@/lib/analytics';
 import { usePreferredCurrency } from '@/lib/settingsStore';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   KeyboardAvoidingView,
@@ -46,12 +46,24 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
   const [frequency, setFrequency] = useState<'Monthly' | 'Yearly'>('Monthly');
   const [category, setCategory] = useState('Entertainment');
 
+  const hasTrackedRef = useRef(false);
+
   useEffect(() => {
     if (visible) {
-      trackSubscriptionCreateStarted();
+      if (!hasTrackedRef.current) {
+        trackSubscriptionCreateStarted();
+        hasTrackedRef.current = true;
+      }
+    } else {
+      hasTrackedRef.current = false;
+    }
+  }, [visible, trackSubscriptionCreateStarted]);
+
+  useEffect(() => {
+    if (visible) {
       setCurrency(preferredCurrency);
     }
-  }, [visible, trackSubscriptionCreateStarted, preferredCurrency]);
+  }, [visible, preferredCurrency]);
 
   const handleClose = () => {
     // Reset form states
