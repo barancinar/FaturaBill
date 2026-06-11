@@ -4,7 +4,7 @@ import React from 'react';
 import { Image, ImageSourcePropType, Text, View } from 'react-native';
 
 interface BrandLogoProps {
-  icon: ImageSourcePropType | string | any;
+  icon: ImageSourcePropType | string;
   name: string;
   color?: string;
   size?: number;
@@ -25,8 +25,8 @@ export default function BrandLogo({ icon, name, color, size = 64 }: BrandLogoPro
   
   const padding = size * 0.12; // Contain logos nicely inside the glass button frame
   const fontSize = size * 0.42; // Responsive readable text size
-  const iconSource = isWebImage 
-    ? (typeof icon === 'string' ? { uri: icon } : icon) 
+  const iconSource = typeof icon === 'string' 
+    ? { uri: icon } 
     : icon;
 
   if (isFallback) {

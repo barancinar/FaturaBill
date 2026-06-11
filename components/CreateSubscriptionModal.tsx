@@ -38,9 +38,33 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Other": "#e2e8f0"
 };
 
-// Generates an elegant dynamic HSL pastel color based on brand name hash
+const hslToHex = (h: number, s: number, l: number): string => {
+  l /= 100;
+  const a = (s * Math.min(l, 1 - l)) / 100;
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+};
+
+const convertHslToHexIfHsl = (color: string): string => {
+  if (color.startsWith('hsl')) {
+    const match = color.match(/hsl\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)%\s*,\s*(\d+(?:\.\d+)?)%\s*\)/);
+    if (match) {
+      const h = parseFloat(match[1]);
+      const s = parseFloat(match[2]);
+      const l = parseFloat(match[3]);
+      return hslToHex(h, s, l);
+    }
+  }
+  return color;
+};
+
+// Generates an elegant dynamic HSL pastel color based on brand name hash, converted to hex
 const getBrandColor = (brandName: string, selectedBrand: BrandTemplate | null, category: string): string => {
-  if (selectedBrand) return selectedBrand.color;
+  if (selectedBrand) return convertHslToHexIfHsl(selectedBrand.color);
   if (!brandName.trim()) return CATEGORY_COLORS[category] || '#e2e8f0';
   
   let hash = 0;
@@ -50,13 +74,15 @@ const getBrandColor = (brandName: string, selectedBrand: BrandTemplate | null, c
   const h = Math.abs(hash) % 360;
   const s = 65; // Pastel saturation
   const l = 80; // High lightness for premium soft look
-  return `hsl(${h}, ${s}%, ${l}%)`;
+  return hslToHex(h, s, l);
 };
 
 // logo.dev dynamic resolver
 const getDynamicLogoUrl = (brandName: string): string | null => {
   const token = process.env.EXPO_PUBLIC_LOGO_DEV_TOKEN;
-  console.log("[Logo.dev] Token from process.env:", token ? "FOUND" : "NOT FOUND (Make sure to restart Expo bundler after adding to .env)");
+  if (process.env.NODE_ENV !== 'production') {
+    console.log("[Logo.dev] Token from process.env:", token ? "FOUND" : "NOT FOUND (Make sure to restart Expo bundler after adding to .env)");
+  }
   if (!token) return null;
   
   const clean = brandName
@@ -79,7 +105,9 @@ const getDynamicLogoUrl = (brandName: string): string | null => {
   
   const domain = domainMapping[clean] || `${clean}.com`;
   const resolvedUrl = `https://img.logo.dev/${domain}?token=${token}`;
-  console.log("[Logo.dev] Resolved URL:", resolvedUrl);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log("[Logo.dev] Resolved URL:", resolvedUrl);
+  }
   return resolvedUrl;
 };
 
@@ -427,7 +455,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
                             size={32} 
                           />
                           <Text className="text-base font-sans-semibold text-primary">
-                            "{name.trim()}" {t('createModal.dynamicLogoSuffix', { defaultValue: '(Dynamic Logo)' })}
+                            {`"${name.trim()}"`} {t('createModal.dynamicLogoSuffix', { defaultValue: '(Dynamic Logo)' })}
                           </Text>
                         </View>
                         <Text className="text-xs font-sans-bold text-accent">

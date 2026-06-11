@@ -111,7 +111,7 @@ export const BRAND_TEMPLATES: BrandTemplate[] = [
     category: 'Design',
     icon: 'canva',
     color: '#00C4CC',
-    searchAliases: ['canva', 'design', 'social', 'graphics', 'temp'],
+    searchAliases: ['canva', 'design', 'social', 'graphics', 'template', 'templates'],
     plans: [
       { name: 'Pro', suggestedPrice: 15.00, billing: 'Monthly' },
       { name: 'Teams', suggestedPrice: 30.00, billing: 'Monthly' },
