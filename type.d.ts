@@ -40,6 +40,7 @@ interface UpcomingSubscription {
     price: number;
     currency?: string;
     daysLeft: number;
+    color?: string;
 }
 
 interface UpcomingSubscriptionCardProps

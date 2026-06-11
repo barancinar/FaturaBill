@@ -2,8 +2,10 @@ import { formatCurrency } from '@/lib/utils'
 import React from 'react'
 import { Image, Text, View } from 'react-native'
 import { useTranslation } from 'react-i18next'
+import { icons } from '@/constants/icons'
+import BrandLogo from './BrandLogo'
 
-const UpcomingSubscriptionCard = ({name, price, daysLeft, icon, currency}: UpcomingSubscription) => {
+const UpcomingSubscriptionCard = ({name, price, daysLeft, icon, currency, color}: UpcomingSubscription) => {
   const { t } = useTranslation();
 
   const getDaysLeftText = () => {
@@ -16,7 +18,7 @@ const UpcomingSubscriptionCard = ({name, price, daysLeft, icon, currency}: Upcom
   return (
     <View className='upcoming-card'>
         <View className="upcoming-row">
-            <Image source={icon} className="upcoming-icon" style={{ width: 56, height: 56 }} />
+            <BrandLogo icon={icon} name={name} color={color} size={56} />
             <View className="flex-1 min-w-0">
                 <Text className='upcoming-price' numberOfLines={1} ellipsizeMode="tail">{formatCurrency(price, currency)}</Text>
                 <Text className='upcoming-meta' numberOfLines={1} ellipsizeMode="tail">{getDaysLeftText()}</Text>

@@ -10,9 +10,11 @@ import clsx from 'clsx';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
 import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions';
+import { icons } from '@/constants/icons';
 import "@/global.css";
 import { formatCurrency, formatSubscriptionDateTime } from '@/lib/utils';
 import { getSubscriptions, updateSubscription, deleteSubscription } from '@/lib/store';
+import BrandLogo from '@/components/BrandLogo';
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -219,8 +221,8 @@ const SubscriptionDetails = () => {
           className="rounded-3xl p-8 items-center justify-center mb-6 border border-border"
           style={{ backgroundColor: sub.color || '#e2e8f0' }}
         >
-          <View className="size-24 rounded-2xl bg-white/80 items-center justify-center p-4 mb-4 border border-black/5">
-            <Image source={sub.icon} className="w-full h-full" resizeMode="contain" />
+          <View className="mb-4">
+            <BrandLogo icon={sub.icon} name={sub.name} color={sub.color} size={96} />
           </View>
 
           {isEditing ? (

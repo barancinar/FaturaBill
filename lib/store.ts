@@ -49,12 +49,23 @@ export interface DBSubscriptionRow {
 // Helper: Map React Native asset to a string key
 const getIconKey = (icon: DBSubscriptionRow['icon'] | string): string => {
   if (typeof icon === 'string') return icon;
+  if (icon && typeof icon === 'object' && 'uri' in icon && typeof icon.uri === 'string') {
+    return icon.uri;
+  }
   const found = Object.entries(icons).find(([_, value]) => value === icon);
   return found ? found[0] : 'plus';
 };
 
 // Helper: Map DB row to Subscription object
 const mapRowToSubscription = (row: DBSubscriptionRow): Subscription => {
+  let mappedIcon: any = icons.plus;
+  if (row.icon) {
+    if (row.icon.startsWith('http://') || row.icon.startsWith('https://')) {
+      mappedIcon = { uri: row.icon };
+    } else {
+      mappedIcon = icons[row.icon as IconKey] || icons.plus;
+    }
+  }
   return {
     id: row.id,
     name: row.name,
@@ -69,7 +80,7 @@ const mapRowToSubscription = (row: DBSubscriptionRow): Subscription => {
     color: row.color || undefined,
     currency: row.currency || undefined,
     isTrial: row.isTrial === 1,
-    icon: icons[row.icon as IconKey] || icons.plus
+    icon: mappedIcon
   };
 };
 

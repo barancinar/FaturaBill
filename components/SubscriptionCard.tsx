@@ -6,6 +6,8 @@ import { useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import { useTranslation } from 'react-i18next'
 import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions'
+import { icons } from '@/constants/icons'
+import BrandLogo from './BrandLogo'
 
 const SubscriptionCard = ({id, name, price, currency, icon, billing, color, category, plan, renewalDate, expanded, onPress, paymentMethod, startDate, status}: SubscriptionCardProps) => {
   const router = useRouter();
@@ -38,11 +40,11 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
     <Pressable onPress={onPress} className={clsx('sub-card', expanded ? 'sub-card-expanded' : 'bg-card')} style={!expanded && color ? {backgroundColor:color}:undefined}>
       <View className='sub-head'>
         <View className="sub-main">
-            <Image source={icon} className="sub-icon" style={{ width: 64, height: 64 }} />
+            <BrandLogo icon={icon} name={name} color={color} size={64} />
             <View className="sub-copy">
                 <Text numberOfLines={1} className="sub-title">{name}</Text>
                 <Text numberOfLines={1} ellipsizeMode='tail' className='sub-meta'>
-                    {getCategoryLabel(category) || plan?.trim() || (renewalDate ? formatSubscriptionDateTime(renewalDate): '')}
+                    {getCategoryLabel(category) || (plan?.trim() ? t(`plans.${plan.trim()}`, { defaultValue: plan.trim() }) : undefined) || (renewalDate ? formatSubscriptionDateTime(renewalDate): '')}
                 </Text>
             </View>
         </View>
@@ -53,7 +55,7 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
             </Text>
         </View>
       </View>
-
+ 
         {expanded && (
             <View className="sub-bdy">
                 <View className="sub-details">
@@ -69,7 +71,7 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
                         <View className="sub-row-copy">
                             <Text className="sub-label">{t('card.category', { defaultValue: 'Category:' })}</Text>
                             <Text className="sub-value" numberOfLines={1} ellipsizeMode='tail'>
-                              {getCategoryLabel(category) || plan?.trim() || t('card.na', { defaultValue: 'N/A' })}
+                              {getCategoryLabel(category) || (plan?.trim() ? t(`plans.${plan.trim()}`, { defaultValue: plan.trim() }) : undefined) || t('card.na', { defaultValue: 'N/A' })}
                             </Text>
                         </View>
                     </View>
