@@ -200,6 +200,12 @@ export const setAuthSession = async (
   userId: string | null,
   getTokenFn: (() => Promise<string | null>) | null
 ) => {
+  if (currentUserId === userId && userId !== null) {
+    getTokenCallback = getTokenFn;
+    bindSettingsAuth(userId, getTokenFn);
+    return;
+  }
+
   currentUserId = userId;
   getTokenCallback = getTokenFn;
   clerkToken = null; // Clear cached token to force refresh

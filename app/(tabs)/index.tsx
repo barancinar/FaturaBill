@@ -5,7 +5,7 @@ import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
 import UpcomingPaymentsModal from "@/components/UpcomingPaymentsModal";
 import { HOME_USER } from "@/constants/data";
 import { useSubscriptions, addSubscription } from "@/lib/store";
-import { useMonthlyBudget, setMonthlyBudget, usePreferredCurrency } from "@/lib/settingsStore";
+import { useMonthlyBudget, setMonthlyBudget, usePreferredCurrency, useIsCacheLoaded, useIsNetworkLoaded } from "@/lib/settingsStore";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import "@/global.css";
@@ -32,6 +32,8 @@ export default function App() {
     const [expandedSubscriptionId, setExpandedSubscriptionId] = useState<string | null>(null);
     const subscriptions = useSubscriptions();
     const budget = useMonthlyBudget();
+    const isCacheLoaded = useIsCacheLoaded();
+    const isNetworkLoaded = useIsNetworkLoaded();
     const router = useRouter();
     const [modalVisible, setModalVisible] = useState(false);
     const [budgetModalVisible, setBudgetModalVisible] = useState(false);
@@ -146,7 +148,13 @@ export default function App() {
             </View>
             
             {/* Personalized Budget Progress Card */}
-            {budget === null ? (
+            {!isCacheLoaded || (budget === null && !isNetworkLoaded) ? (
+                <View className="my-2.5 min-h-36 justify-center items-center rounded-bl-4xl rounded-tr-4xl bg-card border border-border p-6 shadow-sm opacity-65">
+                    <View className="w-10 h-10 rounded-full bg-primary/10 mb-3 animate-pulse" />
+                    <View className="w-1/2 h-5 rounded bg-primary/10 mb-2 animate-pulse" />
+                    <View className="w-1/3 h-4 rounded bg-primary/10 animate-pulse" />
+                </View>
+            ) : budget === null ? (
                 <Pressable 
                     onPress={() => {
                         setTempBudget('');
