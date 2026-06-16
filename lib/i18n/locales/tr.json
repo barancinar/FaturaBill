@@ -133,7 +133,7 @@
       "billing": "Ödeme Döngüsü",
       "category": "Kategori",
       "paymentMethod": "Ödeme Yöntemi",
-      "renewalDate": "Sonraki Yenileme Tarihi (YYYY-MM-DD)",
+      "renewalDate": "Sonraki Yenileme Tarihi",
       "isTrial": "Deneme Sürümü",
       "started": "Başlangıç",
       "status": "Durum"

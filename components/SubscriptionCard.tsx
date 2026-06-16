@@ -8,6 +8,10 @@ import { useTranslation } from 'react-i18next'
 import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions'
 import { icons } from '@/constants/icons'
 import BrandLogo from './BrandLogo'
+import Animated, { FadeIn, FadeOut, LinearTransition, Easing } from 'react-native-reanimated'
+import { getAlphaColor } from '@/lib/colors'
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const SubscriptionCard = ({id, name, price, currency, icon, billing, color, category, plan, renewalDate, expanded, onPress, paymentMethod, startDate, status}: SubscriptionCardProps) => {
   const router = useRouter();
@@ -37,7 +41,24 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
   // Centralized translations are loaded from lib/i18n
 
   return (
-    <Pressable onPress={onPress} className={clsx('sub-card', expanded ? 'sub-card-expanded' : 'bg-card')} style={!expanded && color ? {backgroundColor:color}:undefined}>
+    <AnimatedPressable 
+      layout={LinearTransition.duration(220).easing(Easing.out(Easing.ease))}
+      onPress={onPress} 
+      className={clsx('sub-card overflow-hidden', expanded ? 'sub-card-expanded' : 'bg-card')} 
+      style={color ? { backgroundColor: getAlphaColor(color, expanded ? 0.10 : 0.06) } : undefined}
+    >
+      {color && (
+        <View 
+          style={{ 
+            position: 'absolute', 
+            left: 0, 
+            top: 0, 
+            bottom: 0, 
+            width: 5, 
+            backgroundColor: color 
+          }} 
+        />
+      )}
       <View className='sub-head'>
         <View className="sub-main">
             <BrandLogo icon={icon} name={name} color={color} size={64} />
@@ -57,7 +78,11 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
       </View>
  
         {expanded && (
-            <View className="sub-bdy">
+            <Animated.View 
+              entering={FadeIn.duration(150)} 
+              exiting={FadeOut.duration(100)} 
+              className="sub-bdy"
+            >
                 <View className="sub-details">
                     <View className="sub-row">
                         <View className="sub-row-copy">
@@ -111,10 +136,10 @@ const SubscriptionCard = ({id, name, price, currency, icon, billing, color, cate
                     </Text>
                     <Feather name="arrow-right" size={14} color="#081126" />
                 </TouchableOpacity>
-            </View>
+            </Animated.View>
         )}
 
-    </Pressable>
+    </AnimatedPressable>
   )
 }
 

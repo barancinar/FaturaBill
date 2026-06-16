@@ -2,6 +2,11 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { getLocales } from 'expo-localization';
 import * as SecureStore from 'expo-secure-store';
+import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import 'dayjs/locale/tr';
+
+dayjs.extend(localizedFormat);
 
 import en from './i18n/locales/en.json';
 import tr from './i18n/locales/tr.json';
@@ -34,6 +39,15 @@ if (!i18n.isInitialized) {
   });
 }
 
+// Sync dayjs locale with i18n reactively
+i18n.on('languageChanged', (lng) => {
+  const baseLng = lng.split('-')[0];
+  dayjs.locale(baseLng);
+});
+
+// Set initial dayjs locale based on initial configuration
+dayjs.locale(i18n.language || 'en');
+
 /**
  * Loads the user's saved language preference from secure storage.
  * If found, changes the active i18n language.
@@ -43,13 +57,16 @@ export const initLanguage = async (): Promise<string> => {
   try {
     const savedLanguage = await SecureStore.getItemAsync(LANGUAGE_KEY);
     if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'tr')) {
+      dayjs.locale(savedLanguage);
       await i18n.changeLanguage(savedLanguage);
       return savedLanguage;
     }
   } catch (error) {
     console.error('Failed to load persisted language preference:', error);
   }
-  return i18n.language || 'en';
+  const fallback = i18n.language || 'en';
+  dayjs.locale(fallback.split('-')[0]);
+  return fallback;
 };
 
 /**
@@ -57,6 +74,7 @@ export const initLanguage = async (): Promise<string> => {
  */
 export const changeLanguage = async (lang: 'en' | 'tr'): Promise<void> => {
   try {
+    dayjs.locale(lang);
     await i18n.changeLanguage(lang);
     await SecureStore.setItemAsync(LANGUAGE_KEY, lang);
   } catch (error) {

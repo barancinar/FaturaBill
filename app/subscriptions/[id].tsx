@@ -5,7 +5,8 @@ import { styled } from 'nativewind';
 import { usePostHog } from 'posthog-react-native';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Image, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, Switch, Text, TextInput, TouchableOpacity, View, Platform, Modal, StyleSheet, Pressable } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import clsx from 'clsx';
 import { SafeAreaView as RNSafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,6 +16,8 @@ import "@/global.css";
 import { formatCurrency, formatSubscriptionDateTime } from '@/lib/utils';
 import { getSubscriptions, updateSubscription, deleteSubscription } from '@/lib/store';
 import BrandLogo from '@/components/BrandLogo';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { getAlphaColor } from '@/lib/colors';
 
 const SafeAreaView = styled(RNSafeAreaView);
 
@@ -56,8 +59,37 @@ const SubscriptionDetails = () => {
   const [billing, setBilling] = useState('Monthly');
   const [category, setCategory] = useState('Entertainment');
   const [paymentMethod, setPaymentMethod] = useState('');
-  const [renewalDate, setRenewalDate] = useState('');
+  const [renewalDate, setRenewalDate] = useState<Date | null>(null);
   const [isTrial, setIsTrial] = useState(false);
+
+  // Date Picker States
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempRenewalDate, setTempRenewalDate] = useState<Date | null>(null);
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      if (event.type === 'dismissed') {
+        // Abort state mutation cleanly if dismissed on Android
+        return;
+      }
+      if (selectedDate) {
+        setRenewalDate(selectedDate);
+      }
+    } else {
+      // iOS: update temp date as user spins wheels
+      if (selectedDate) {
+        setTempRenewalDate(selectedDate);
+      }
+    }
+  };
+
+  const handleConfirmIOSDate = () => {
+    if (tempRenewalDate) {
+      setRenewalDate(tempRenewalDate);
+    }
+    setShowDatePicker(false);
+  };
 
   // Fetch subscription from global list on mount / focus
   useEffect(() => {
@@ -71,7 +103,7 @@ const SubscriptionDetails = () => {
       setBilling(found.billing);
       setCategory(found.category || 'Other');
       setPaymentMethod(found.paymentMethod || '');
-      setRenewalDate(found.renewalDate ? dayjs(found.renewalDate).format('YYYY-MM-DD') : '');
+      setRenewalDate(found.renewalDate ? dayjs(found.renewalDate).toDate() : null);
       setIsTrial(found.isTrial === true);
     }
   }, [id]);
@@ -101,16 +133,10 @@ const SubscriptionDetails = () => {
       return;
     }
 
-    // Validate date format
-    const parsedDate = dayjs(renewalDate, 'YYYY-MM-DD', true);
-    let finalRenewalDate = sub.renewalDate;
-    if (renewalDate) {
-      if (!parsedDate.isValid()) {
-        Alert.alert(t("details.error", { defaultValue: "Error" }), t("details.errorDateFormat", { defaultValue: "Please input date in YYYY-MM-DD format." }));
-        return;
-      }
-      finalRenewalDate = parsedDate.toISOString();
-    }
+    // Reset timezone hourly drifts to midnight boundary before passing to store update
+    const finalRenewalDate = renewalDate
+      ? dayjs(renewalDate).startOf('day').toISOString()
+      : sub.renewalDate;
 
     const updatedSub: Subscription = {
       ...sub,
@@ -217,9 +243,13 @@ const SubscriptionDetails = () => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
 
         {/* Main Banner Card */}
-        <View
-          className="rounded-3xl p-8 items-center justify-center mb-6 border border-border"
-          style={{ backgroundColor: sub.color || '#e2e8f0' }}
+        <Animated.View
+          entering={FadeInDown.duration(400).springify()}
+          className="rounded-3xl p-8 items-center justify-center mb-6 border border-border overflow-hidden"
+          style={{ 
+            backgroundColor: getAlphaColor(sub.color, 0.20), 
+            borderColor: sub.color ? getAlphaColor(sub.color, 0.35) : 'rgba(0,0,0,0.1)' 
+          }}
         >
           <View className="mb-4">
             <BrandLogo icon={sub.icon} name={sub.name} color={sub.color} size={96} />
@@ -284,11 +314,14 @@ const SubscriptionDetails = () => {
               )}
             </View>
           )}
-        </View>
+        </Animated.View>
 
         {/* Read-Only Details List */}
         {!isEditing ? (
-          <View className="bg-card border border-border rounded-3xl p-5 gap-4 mb-6">
+          <Animated.View 
+            entering={FadeInDown.delay(100).duration(400).springify()}
+            className="bg-card border border-border rounded-3xl p-5 gap-4 mb-6"
+          >
             {/* Status */}
             <View className="flex-row justify-between items-center py-2 border-b border-border">
               <Text className="text-sm font-sans-semibold text-muted-foreground">
@@ -344,10 +377,13 @@ const SubscriptionDetails = () => {
                 {formatSubscriptionDateTime(sub.renewalDate)}
               </Text>
             </View>
-          </View>
+          </Animated.View>
         ) : (
           /* Edit Mode Input Forms */
-          <View className="bg-card border border-border rounded-3xl p-5 gap-4 mb-6">
+          <Animated.View 
+            entering={FadeInDown.duration(300).springify()}
+            className="bg-card border border-border rounded-3xl p-5 gap-4 mb-6"
+          >
 
             {/* Currency Switcher */}
             <View className="gap-1.5">
@@ -412,22 +448,31 @@ const SubscriptionDetails = () => {
               />
             </View>
 
-            {/* Renewal Date input */}
+            {/* Renewal Date Picker Row */}
             <View className="gap-1.5">
               <Text className="text-sm font-sans-semibold text-muted-foreground">{t('details.fields.renewalDate')}</Text>
-              <TextInput
-                value={renewalDate}
-                onChangeText={setRenewalDate}
-                placeholder="YYYY-MM-DD"
-                className="bg-background border border-border rounded-xl px-4.5 py-3.5 text-base font-sans-semibold text-primary"
-              />
+              <TouchableOpacity
+                onPress={() => {
+                  setTempRenewalDate(renewalDate || new Date());
+                  setShowDatePicker(true);
+                }}
+                className="flex-row items-center justify-between bg-background border border-border rounded-xl px-4.5 py-3.5"
+              >
+                <Text className="text-base font-sans-semibold text-primary" style={{ color: '#081126' }}>
+                  {renewalDate ? dayjs(renewalDate).format('L') : t('card.notProvided', { defaultValue: 'Not Provided' })}
+                </Text>
+                <Feather name="calendar" size={20} color="#081126" />
+              </TouchableOpacity>
             </View>
-          </View>
+          </Animated.View>
         )}
 
         {/* Read-Only Status & Actions Section */}
         {!isEditing && (
-          <View className="gap-3">
+          <Animated.View 
+            entering={FadeInDown.delay(200).duration(400).springify()}
+            className="gap-3"
+          >
             {/* Active Status Actions */}
             {sub.status === 'active' && (
               <TouchableOpacity
@@ -490,10 +535,55 @@ const SubscriptionDetails = () => {
                 {t('details.delete', 'Delete')}
               </Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         )}
 
       </ScrollView>
+
+      {/* Android Native Picker */}
+      {showDatePicker && Platform.OS === 'android' && (
+        <DateTimePicker
+          value={renewalDate || new Date()}
+          mode="date"
+          display="default"
+          onChange={handleDateChange}
+        />
+      )}
+
+      {/* iOS Slider Modal Sheet */}
+      {Platform.OS === 'ios' && (
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View className="modal-overlay justify-end">
+            <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowDatePicker(false)} />
+            <View className="modal-container bg-card border-t border-border rounded-t-3xl p-5 pb-10">
+              <View className="flex-row justify-between items-center mb-6">
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text className="text-base font-sans-semibold text-muted-foreground">
+                    {t('common.cancel', { defaultValue: 'Cancel' })}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleConfirmIOSDate}>
+                  <Text className="text-base font-sans-bold text-primary">
+                    {t('common.save', { defaultValue: 'Save' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={tempRenewalDate || renewalDate || new Date()}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                textColor="#081126"
+              />
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };
