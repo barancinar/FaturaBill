@@ -135,7 +135,7 @@ const SubscriptionDetails = () => {
 
     // Reset timezone hourly drifts to midnight boundary before passing to store update
     const finalRenewalDate = renewalDate
-      ? dayjs(renewalDate).startOf('day').toISOString()
+      ? dayjs(renewalDate).format('YYYY-MM-DD')
       : sub.renewalDate;
 
     const updatedSub: Subscription = {

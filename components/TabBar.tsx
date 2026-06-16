@@ -25,12 +25,14 @@ interface LayoutInfo {
 const TabButton = ({
   focused,
   icon,
+  title,
   onPress,
   onLongPress,
   onLayout,
 }: {
   focused: boolean;
   icon: any;
+  title: string;
   onPress: () => void;
   onLongPress: () => void;
   onLayout?: (event: LayoutChangeEvent) => void;
@@ -75,6 +77,10 @@ const TabButton = ({
       onLongPress={onLongPress}
       activeOpacity={0.7}
       style={styles.tabItem}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: focused }}
+      accessibilityLabel={title}
+      testID={`tab-button-${title}`}
     >
       <Animated.View style={[styles.iconContainer, animatedStyle]}>
         <Image 
@@ -203,11 +209,15 @@ export default function TabBar({ state, descriptors, navigation }: BottomTabBarP
         
         if (!tabData) return null;
 
+        const options = descriptors[route.key].options;
+        const title = options.title !== undefined ? options.title : route.name;
+
         return (
           <TabButton
             key={route.key}
             focused={isFocused}
             icon={tabData.icon}
+            title={title}
             onPress={() => handlePress(route, isFocused)}
             onLongPress={() => handleLongPress(route)}
             onLayout={(e) => handleLayout(index, e)}

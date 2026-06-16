@@ -35,7 +35,7 @@ export const getAlphaColor = (color: string | undefined | null, opacity: number)
   if (trimmed.startsWith('hsl')) {
     const match = trimmed.match(/hsla?\(\s*(\d+(?:\.\d+)?)\s*,\s*(\d+(?:\.\d+)?)%\s*,\s*(\d+(?:\.\d+)?)%/);
     if (match) {
-      const h = parseFloat(match[1]);
+      const h = parseFloat(match[1]) % 360;
       const s = parseFloat(match[2]);
       const l = parseFloat(match[3]);
       
