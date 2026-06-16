@@ -133,7 +133,7 @@
       "billing": "Billing Cycle",
       "category": "Category",
       "paymentMethod": "Payment Method",
-      "renewalDate": "Next Renewal Date (YYYY-MM-DD)",
+      "renewalDate": "Next Renewal Date",
       "isTrial": "Trial Subscription",
       "started": "Started",
       "status": "Status"

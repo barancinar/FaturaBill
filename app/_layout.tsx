@@ -8,6 +8,7 @@ import { tokenCache } from "@/clerk/tokenCache";
 import { setAuthSession } from "@/lib/store";
 import { PostHogProvider, usePostHog } from "posthog-react-native";
 import { initSettingsStore, fetchLatestRates, setPreferredCurrency } from "@/lib/settingsStore";
+import { StatusBar } from "expo-status-bar";
 
 
 
@@ -157,6 +158,7 @@ export default function RootLayout() {
             host: posthogHost,
           }}
         >
+          <StatusBar style="dark" />
           <InitialLayout />
         </PostHogProvider>
       </ClerkLoaded>
