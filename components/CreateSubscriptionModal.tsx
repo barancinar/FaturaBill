@@ -1,5 +1,5 @@
 import BrandLogo from '@/components/BrandLogo';
-import { BRAND_TEMPLATES, BrandTemplate, SubscriptionPlan } from '@/constants/brandTemplates';
+import { BRAND_TEMPLATES, BrandTemplate, SubscriptionPlan, getPriceForCurrency } from '@/constants/brandTemplates';
 import { icons } from '@/constants/icons';
 import { SUBSCRIPTION_CATEGORIES } from '@/constants/subscriptions';
 import { useAnalytics } from '@/lib/analytics';
@@ -173,7 +173,9 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
     if (brand.plans && brand.plans.length > 0) {
       const firstPlan = brand.plans[0];
       setSelectedPlan(firstPlan);
-      setPrice(firstPlan.suggestedPrice.toString());
+      const resolved = getPriceForCurrency(firstPlan, currency);
+      setPrice(resolved.price.toString());
+      setCurrency(resolved.currency);
       setFrequency(firstPlan.billing);
     } else {
       setSelectedPlan(null);
@@ -205,7 +207,9 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
       if (matched.plans && matched.plans.length > 0 && !price) {
         const firstPlan = matched.plans[0];
         setSelectedPlan(firstPlan);
-        setPrice(firstPlan.suggestedPrice.toString());
+        const resolved = getPriceForCurrency(firstPlan, currency);
+        setPrice(resolved.price.toString());
+        setCurrency(resolved.currency);
         setFrequency(firstPlan.billing);
       }
     } else {
@@ -479,12 +483,14 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
                 >
                   {selectedBrand.plans.map((plan) => {
                     const isSelected = selectedPlan?.name === plan.name;
+                    const resolved = getPriceForCurrency(plan, currency);
                     return (
                       <Pressable
                         key={plan.name}
                         onPress={() => {
                           setSelectedPlan(plan);
-                          setPrice(plan.suggestedPrice.toString());
+                          setPrice(resolved.price.toString());
+                          setCurrency(resolved.currency);
                           setFrequency(plan.billing);
                         }}
                         className={clsx(
@@ -500,7 +506,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
                           className={clsx("text-sm", isSelected ? "font-sans-bold" : "font-sans-semibold text-muted-foreground")}
                           style={isSelected ? { color: activeAccentColor } : undefined}
                         >
-                          {t(`plans.${plan.name}`, { defaultValue: plan.name })} ({plan.suggestedPrice})
+                          {t(`plans.${plan.name}`, { defaultValue: plan.name })} ({resolved.currency === currency ? "" : `${resolved.currency} `}{resolved.price})
                         </Text>
                       </Pressable>
                     );
@@ -539,7 +545,17 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
                       borderColor: activeAccentColor, 
                       backgroundColor: activeAccentColor + '10' 
                     } : undefined}
-                    onPress={() => setCurrency(curr)}
+                    onPress={() => {
+                      setCurrency(curr);
+                      if (selectedPlan) {
+                        if (selectedPlan.prices && selectedPlan.prices[curr] !== undefined) {
+                          setPrice(selectedPlan.prices[curr]!.toString());
+                        } else {
+                          setSelectedPlan(null);
+                          setPrice('');
+                        }
+                      }
+                    }}
                   >
                     <Text 
                       className={clsx("picker-option-text", currency === curr && "picker-option-text-active")}

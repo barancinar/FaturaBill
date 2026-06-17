@@ -157,6 +157,7 @@
     "dynamicLogoSuffix": "(Dynamic Logo)"
   },
   "plans": {
+    "Basic": "Basic",
     "Student": "Student",
     "Individual": "Individual",
     "Duo": "Duo",
