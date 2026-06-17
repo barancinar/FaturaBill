@@ -173,7 +173,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
     if (brand.plans && brand.plans.length > 0) {
       const firstPlan = brand.plans[0];
       setSelectedPlan(firstPlan);
-      const resolved = getPriceForCurrency(firstPlan, preferredCurrency);
+      const resolved = getPriceForCurrency(firstPlan, currency);
       setPrice(resolved.price.toString());
       setCurrency(resolved.currency);
       setFrequency(firstPlan.billing);
@@ -207,7 +207,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
       if (matched.plans && matched.plans.length > 0 && !price) {
         const firstPlan = matched.plans[0];
         setSelectedPlan(firstPlan);
-        const resolved = getPriceForCurrency(firstPlan, preferredCurrency);
+        const resolved = getPriceForCurrency(firstPlan, currency);
         setPrice(resolved.price.toString());
         setCurrency(resolved.currency);
         setFrequency(firstPlan.billing);
@@ -552,6 +552,7 @@ export default function CreateSubscriptionModal({ visible, onClose, onCreate }: 
                           setPrice(selectedPlan.prices[curr]!.toString());
                         } else {
                           setSelectedPlan(null);
+                          setPrice('');
                         }
                       }
                     }}
