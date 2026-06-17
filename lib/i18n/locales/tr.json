@@ -157,6 +157,7 @@
     "dynamicLogoSuffix": "(Dinamik Logo)"
   },
   "plans": {
+    "Basic": "Temel",
     "Student": "Öğrenci",
     "Individual": "Bireysel",
     "Duo": "Duo",
